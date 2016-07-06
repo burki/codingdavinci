@@ -9,7 +9,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class StatisticsController
 {
-    private function addWordCount (&$words, $text, $stemmer = NULL, $split = TRUE) {
+    private function addWordCount (&$words, $text, $stemmer = NULL, $split = TRUE)
+    {
       // see http://stackoverflow.com/questions/790596/split-a-text-into-single-words
         $tokens = $split
             ? preg_split('/((^\p{P}+)|(\p{P}*\s+\p{P}*)|(\p{P}+$))/u', $text, -1, PREG_SPLIT_NO_EMPTY)
@@ -27,7 +28,8 @@ class StatisticsController
         }
     }
 
-    function cmpPercentage ($a, $b) {
+    function cmpPercentage ($a, $b)
+    {
         if ($a['percentage'] == $b['percentage']) {
             return 0;
         }
@@ -142,14 +144,14 @@ class StatisticsController
         }
 
         return $app['twig']->render('statistics.year.twig',
-                                    array('subtitle' => json_encode($subtitle),
-                                          'categories' => json_encode($categories),
-                                          'person_birth' => json_encode(array_values($total['birth'])),
-                                          'person_death' => json_encode(array_values($total['death'])),
-                                          'works_base' => json_encode(array_values($total['works_issued_base'])),
-                                          'works_extended' => json_encode(array_values($total['works_issued_extended'])),
-                                          )
-                                    );
+                                    array(
+                                        'subtitle' => json_encode($subtitle),
+                                        'categories' => json_encode($categories),
+                                        'person_birth' => json_encode(array_values($total['birth'])),
+                                        'person_death' => json_encode(array_values($total['death'])),
+                                        'works_base' => json_encode(array_values($total['works_issued_base'])),
+                                        'works_extended' => json_encode(array_values($total['works_issued_extended'])),
+                                    ));
     }
 
     public function wordCountAction(Request $request, BaseApplication $app)
@@ -425,6 +427,7 @@ class StatisticsController
         $content = <<<EOT
     <div id="map" style="width:800px; height: 450px; position: relative;"></div>
 	<script>
+        L.mapbox.accessToken = 'pk.eyJ1IjoidmVyYnJhbm50ZS12ZXJiYW5udGUiLCJhIjoiUXUtM1ZhTSJ9.os53GU9yi7z-QQ5zv2vU-A';
 		var map = L.map('map');
 
         map.fitBounds([
@@ -525,7 +528,7 @@ class StatisticsController
 			attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
 				'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
 				'Imagery &copy; <a href="http://mapbox.com">Mapbox</a>',
-			id: 'examples.map-i86knfo3'
+			id: 'verbrannte-verbannte.k11eddb9'
 		}).addTo(map);
 
         var countriesData = ${features_json};

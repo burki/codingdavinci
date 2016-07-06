@@ -15,7 +15,8 @@ class ApiApplication extends BaseApplication
 {
     protected $application;
 
-    public function __construct() {
+    public function __construct()
+    {
         $container = $this->setupContainer();
 
         $this->application = $app = new \Silex\Application();
@@ -72,7 +73,8 @@ class ApiApplication extends BaseApplication
     }
 
 
-    public function run() {
+    public function run()
+    {
         $this->application->run();
     }
 }

@@ -9,7 +9,7 @@ use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 class MysqlFulltextSimpleParser
 {
     var $min_length = 0; // you might have to turn this up to ft_min_word_len
-    var $add_wildcard = FALSE; // match -> match*
+    var $add_wildcard = false; // match -> match*
     var $output = '';
 
     /**
@@ -18,10 +18,14 @@ class MysqlFulltextSimpleParser
       * @param string the matched text
       * @param int lexer state (ignored here)
       */
-    function accept($match, $state) {
+    function accept($match, $state)
+    {
         // echo "$state: -$match-<br />";
-        if ($state == LEXER_UNMATCHED && strlen($match) < $this->min_length && strpos($match, '*') === FALSE)
-            return TRUE;
+        if ($state == LEXER_UNMATCHED && strlen($match) < $this->min_length
+            && strpos($match, '*') === false)
+        {
+            return true;
+        }
 
         if ($state != LEXER_MATCHED) {
             $this->output .= '+';
@@ -32,10 +36,11 @@ class MysqlFulltextSimpleParser
 
         $this->output .= $match;
 
-        return TRUE;
+        return true;
     }
 
-    function writeQuoted($match, $state) {
+    function writeQuoted($match, $state)
+    {
         static $words;
 
         switch ($state) {
@@ -49,29 +54,33 @@ class MysqlFulltextSimpleParser
                 break;
 
             case LEXER_UNMATCHED:
-                if (strlen($match) >= $this->min_length)
+                if (strlen($match) >= $this->min_length) {
                     $words[] = $match;
+                }
                 break;
 
             // Exiting the variable reference
             case LEXER_EXIT:
-                if (count($words) > 0)
+                if (count($words) > 0) {
                     $this->output .= '+"' . implode(' ', $words) . '"';
+                }
                 break;
-      }
+        }
 
-      return TRUE;
+        return true;
     }
 
-    static function parseFulltextBoolean ($search, $add_wildcard = FALSE) {
+    static function parseFulltextBoolean ($search, $add_wildcard = false)
+    {
         include_once 'simpletest_parser.php';
 
-        if (preg_match("/[\+\-][\b\"]/", $search))
+        if (preg_match("/[\+\-][\b\"]/", $search)) {
             return $search;
+        }
 
         $parser = new MysqlFulltextSimpleParser();
         if ($add_wildcard) {
-            $parser->add_wildcard = TRUE;
+            $parser->add_wildcard = true;
         }
         $lexer = new SimpleLexer($parser);
         $lexer->addPattern("\\s+");
@@ -93,7 +102,8 @@ abstract class BaseApplication
 {
     protected $entityManager;
 
-    public static function setupDoctrine($container) {
+    public static function setupDoctrine($container)
+    {
         // setup Doctrine\ORM
         $isDevMode = true;
         $paths = array('Entity');
@@ -114,6 +124,7 @@ abstract class BaseApplication
 
         // create a driver chain for metadata reading
         $driverChain = new \Doctrine\ORM\Mapping\Driver\DriverChain();
+
         // load superclass metadata mapping only, into driver chain
         // also registers Gedmo annotations.NOTE: you can personalize it
         \Gedmo\DoctrineExtensions::registerAbstractMappingIntoDriverChainORM(
@@ -123,7 +134,6 @@ abstract class BaseApplication
         $driverChain->addDriver($annotationDriver, 'Entity');
 
         $config->setMetadataDriverImpl($annotationDriver);
-
 
         $config->addCustomStringFunction('IFNULL', 'DoctrineExtensions\Query\Mysql\IfNull');
         $config->addCustomNumericFunction('MATCH', 'DoctrineExtensions\Query\Mysql\MatchAgainst');
@@ -145,10 +155,12 @@ abstract class BaseApplication
         $evm->addEventSubscriber($timestampableListener);
 
         $entityManager = \Doctrine\ORM\EntityManager::create($dbParams, $config, $evm);
+
         return $entityManager;
     }
 
-    protected function setupContainer() {
+    protected function setupContainer()
+    {
         $base_dir = realpath(__DIR__ . '/..'); // assume we are one below the project-base
         $container = new ContainerBuilder();
 
@@ -166,8 +178,9 @@ abstract class BaseApplication
 
         return $container;
     }
-    
-    protected function getBasePath() {
+
+    protected function getBasePath()
+    {
         return $this->container->getParameter('base_path');
     }
 

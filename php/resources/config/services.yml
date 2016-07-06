@@ -8,11 +8,16 @@ services:
         class: Doctrine\ORM\EntityManager
         factory_class:  ConsoleApplication
         factory_method: setupDoctrine
-        arguments: [%dbal%]
+        arguments: [ %dbal% ]
         
     http-client:
-        class: GuzzleHttp\Client
-                    
+        # class: GuzzleHttp\Client # 4.*
+        class: Guzzle\Http\Client
+        
     name-service:
         class: Service\NameService
         arguments: [ @gender-provider ]
+
+    gnd-service:
+        class: Service\GndService
+        arguments: [ @gnd-provider ]

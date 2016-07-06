@@ -205,6 +205,7 @@ class PlaceController
             $query = $qb->getQuery();
             $results = $query->getResult();
             $markers = $polylines = '';
+
             foreach ($results as $place) {
                 $places[$place['gnd']] = $place;
                 $persons = array();
@@ -217,7 +218,7 @@ class PlaceController
                           . $place['latitude']
                           . ', '
                           . $place['longitude'] . ']'
-                          . ($entity->gnd == $place['gnd'] ? ', {icon: iconSelf}' : '')
+                          . ($entity->gnd == $place['gnd'] ? ', {icon: iconSelf}' : ', {icon: iconOther}')
                           . ').addTo(map)'
                           . '.bindPopup('
                           . json_encode('<b><a href="' . $app['url_generator']->generate('place-detail', array('id' => $place['id'])) . '">'
@@ -239,6 +240,7 @@ class PlaceController
                     $min_longitude = $place['longitude'];
                 }
             }
+
             foreach ($lifePaths as $person_id => $entry) {
                 if ($entry[0] != $entry[1]
                     && isset($places[$entry[0]]) && isset($places[$entry[1]]))
@@ -262,6 +264,8 @@ EOT;
             $map .= '<div id="map" style="width:543px; height: 450px;"></div>';
             $map .= <<<EOT
 	<script>
+        L.mapbox.accessToken = 'pk.eyJ1IjoidmVyYnJhbm50ZS12ZXJiYW5udGUiLCJhIjoiUXUtM1ZhTSJ9.os53GU9yi7z-QQ5zv2vU-A';
+
 		var map = L.map('map');
         map.fitBounds([
             [${min_latitude}, ${min_longitude}],
@@ -272,9 +276,10 @@ EOT;
 			attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
 				'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
 				'Imagery &copy; <a href="http://mapbox.com">Mapbox</a>',
-			id: 'examples.map-i86knfo3'
+			id: 'verbrannte-verbannte.k11eddb9'
 		}).addTo(map);
         var iconSelf = L.MakiMarkers.icon({icon: "circle", color: "#00be7b", size: "m"});
+        var iconOther = L.MakiMarkers.icon({icon: "circle", color: "#1e90ff", size: "m"});
 
         ${markers}
         ${polylines}

@@ -25,27 +25,33 @@ class Searchwidget
         $this->session = $session;
     }
 
-    public function getRequest() {
+    public function getRequest()
+    {
         return $this->request;
     }
 
-    public function addSortBy($name, $options = array()) {
+    public function addSortBy($name, $options = array())
+    {
         $this->sort_by[$name] = $options;
     }
 
-    public function addFilter($name, $options = array()) {
+    public function addFilter($name, $options = array())
+    {
         $this->filters[$name] = $options;
     }
 
-    public function getCurrentSearch ($name = 'search') {
+    public function getCurrentSearch ($name = 'search')
+    {
         return $this->getValueFromRequest($name);
     }
 
-    public function getSortBy() {
+    public function getSortBy()
+    {
         return $this->sort_by;
     }
 
-    public function getCurrentSortBy($name = 'sort') {
+    public function getCurrentSortBy($name = 'sort')
+    {
         if (empty($this->sort_by)) {
             // no orderings set
             return false;
@@ -72,23 +78,33 @@ class Searchwidget
         if (empty($sort_by_dir)) {
             $sort_by_dir = 'asc'; // TODO: check if overriden in options
         }
+
         return array($sort_by, $sort_by_dir);
     }
 
-    public function getFilters() {
+    public function getFilters()
+    {
         return $this->filters;
     }
 
-    public function getActiveFilters() {
+    public function getActiveFilters($options = array())
+    {
         $active = array();
         foreach ($this->filters as $name => $filter) {
-            $value = $this->getValueFromRequest($name);
+            $filter_options = array();
+            if (array_key_exists($name, $options)) {
+                $filter_options = $options[$name];
+            }
+            $value = $this->getValueFromRequest($name,
+                                                isset($filter_options['default'])
+                                                    ? $filter_options['default'] : null);
             $active[$name] = $value;
         }
         return $active;
     }
 
-    protected function getValueFromRequest($name) {
+    protected function getValueFromRequest($name, $default_value = null)
+    {
         $value = null;
 
         if ('POST' == $this->request->getMethod()) {
@@ -113,6 +129,10 @@ class Searchwidget
             else {
                 $this->session->set($key, $value);
             }
+        }
+
+        if (!isset($value)) {
+            $value = $default_value;
         }
 
         return $value;

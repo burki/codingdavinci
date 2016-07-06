@@ -1,7 +1,7 @@
 {% import 'helper.twig' as helper %}
 {% extends 'layout.html.twig' %}
 {% block head %}
-<script src="{{ app.request.basepath }}/js/seealso.js"></script>
+    <script src="{{ app.request.basepath }}/js/seealso.js"></script>
     <script>
         var service = new SeeAlsoCollection();
         service.services = {
@@ -74,8 +74,8 @@
     {% if gnd is defined %}
     <h2>Externe Angebote</h2>
     <p>Gemeinsame Normdatei: <a href="{{ entry.__get('gnd') }}" target="_blank">{{ gnd }}</a>.
-    {% if entityfacts is not empty %}
-    <br />    <a href="https://www.deutsche-digitale-bibliothek.de/entity/{{ gnd }}" target="_blank">Personenseite in der Deutschen Digitalen Bibliothek</a>
+    {% if ddb_count > 0 %}
+    <br />    <a href="https://www.deutsche-digitale-bibliothek.de/entity/{{ gnd }}" target="_blank">Personenseite in der Deutschen Digitalen Bibliothek ({{ ddb_count }} Objekt{% if ddb_count != 1 %}e{% endif %})</a>
     {% endif %}
     </p>
     <div title="{{ gnd }}" class="pndaks seealso-ul"></div>

@@ -11,7 +11,8 @@ class ConsoleApplication extends BaseApplication
 {
     protected $application;
 
-    public function __construct() {
+    public function __construct()
+    {
         $container = $this->setupContainer();
 
         $this->application = new \Symfony\Component\Console\Application();
@@ -27,7 +28,8 @@ class ConsoleApplication extends BaseApplication
         $this->application->addCommands($commands);
     }
 
-    public function run() {
+    public function run()
+    {
         $this->application->run();
     }
 }
@@ -36,12 +38,14 @@ abstract class BaseCommand extends Command
 {
     protected $container;
 
-    public function __construct($container) {
+    public function __construct($container)
+    {
         parent::__construct();
         $this->container = $container;
     }
 
-    protected function normalizeUnicode($value) {
+    protected function normalizeUnicode($value)
+    {
         if (!class_exists('Normalizer')) {
             return $value;
         }
@@ -54,11 +58,13 @@ abstract class BaseCommand extends Command
         return $value;
     }
 
-    protected function getBasePath() {
+    protected function getBasePath()
+    {
         return $this->container->getParameter('base_path');
     }
 
-    protected function readCsv($fname, $separator = ',') {
+    protected function readCsv($fname, $separator = ',')
+    {
         $entries = array();
 
         $headers = false;
@@ -83,15 +89,18 @@ abstract class BaseCommand extends Command
         return $entries;
     }
 
-    protected function getEntityManager() {
+    protected function getEntityManager()
+    {
         return $this->container->get('doctrine');
     }
 
-    protected function getNameService() {
+    protected function getNameService()
+    {
         return $this->container->get('name-service');
     }
 
-    protected function getLogger($output) {
+    protected function getLogger($output)
+    {
         try {
             return $this->container->get('logger');
         }
@@ -146,7 +155,6 @@ abstract class BaseCommand extends Command
         return $json;
     }
 
-
 }
 
 class CreateCommand extends BaseCommand
@@ -177,7 +185,7 @@ class CreateCommand extends BaseCommand
         );
 
         $schemaManager = $entityManager->getConnection()->getSchemaManager();
-        $schemaTool = new Doctrine\ORM\Tools\SchemaTool($entityManager);
+        $schemaTool = new \Doctrine\ORM\Tools\SchemaTool($entityManager);
 
         try {
             foreach ($table_classes as $table => $class) {
@@ -193,7 +201,6 @@ class CreateCommand extends BaseCommand
         catch (Exception $e) {
            $logger->error("Error createSchema " . $table . ': ' . $e->getMessage());
         }
-
     }
 }
 
@@ -268,9 +275,9 @@ class ImportCommand extends BaseCommand
         }
     }
 
-
     private function insertUpdatePublicationEntry(&$publication_entry,
-                                                  $update_existing = true, $create_missing = false) {
+                                                  $update_existing = true, $create_missing = false)
+    {
         if (array_key_exists('id', $publication_entry)) {
             $entity = $this->em->getRepository('Entities\Publication')->findOneById($publication_entry['id']);
         }
@@ -322,7 +329,8 @@ class ImportCommand extends BaseCommand
         return true;
     }
 
-    private function insertUpdatePerson(&$person, $update_existing = true) {
+    private function insertUpdatePerson(&$person, $update_existing = true)
+    {
         if (empty($person['gnd'])) {
             return false;
         }
@@ -360,7 +368,8 @@ class ImportCommand extends BaseCommand
         return true;
     }
 
-    private function insertUpdateListEntry(&$list_entry, $row, $update_existing = true) {
+    private function insertUpdateListEntry(&$list_entry, $row, $update_existing = true)
+    {
         $entity = $this->em->getRepository('Entities\BannedList')->findOneByRow($row);
 
         if (isset($entity) && !$update_existing) {
@@ -408,7 +417,8 @@ class ImportCommand extends BaseCommand
         return true;
     }
 
-    private function insertUpdateCountry(&$country, $update_existing = true) {
+    private function insertUpdateCountry(&$country, $update_existing = true)
+    {
         if (empty($country['iso-2'])) {
             return false;
         }
@@ -616,7 +626,8 @@ class FetchCommand extends BaseCommand
             ->setDescription('Fetch external data');
     }
 
-    private function fetchPublicationData($type) {
+    private function fetchPublicationData($type)
+    {
         if ('dnb' == $type) {
             \EasyRdf_Namespace::set('dc', 'http://purl.org/dc/elements/1.1/');
             \EasyRdf_Namespace::set('gnd', 'http://d-nb.info/standards/elementset/gnd#');
@@ -783,7 +794,8 @@ class FetchCommand extends BaseCommand
     /**
      * easyrdf-Helper Stuff
      */
-    protected function setValuesFromResource (&$values, $resource, $propertyMap, $prefix = '') {
+    protected function setValuesFromResource (&$values, $resource, $propertyMap, $prefix = '')
+    {
         foreach ($propertyMap as $src => $target) {
             if (is_int($src)) {
                 // numerical indexed
@@ -823,7 +835,8 @@ class FetchCommand extends BaseCommand
         }
     }
 
-    private function fetchPlaceData($type, $update=false) {
+    private function fetchPlaceData($type, $update=false)
+    {
         // find missing
         $dql = "SELECT P, C FROM Entities\Place P LEFT JOIN P.country C";
 
@@ -985,15 +998,13 @@ class FetchCommand extends BaseCommand
                     $this->em->persist($place);
                     $this->em->flush();
                 }
-
-
-
             }
 
         }
     }
 
-    protected function fetchPersonGenderData ($update = false) {
+    protected function fetchPersonGenderData ($update = false)
+    {
         // find missing
         $qb = $this->em->createQueryBuilder();
         $qb->select(array('P'))
@@ -1019,7 +1030,8 @@ class FetchCommand extends BaseCommand
         }
     }
 
-    private function fetchPersonData($type, $update = false) {
+    private function fetchPersonData($type, $update = false)
+    {
         // find missing
         $qb = $this->em->createQueryBuilder();
         $qb->select(array('P'))

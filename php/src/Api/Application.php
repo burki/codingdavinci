@@ -7,7 +7,8 @@ use Silex\Application as BaseApplication;
 class Application extends BaseApplication
 {
 
-    function setup($env) {
+    function setup($env)
+    {
         // read config
         define('ROOT_PATH', __DIR__ . '/../..');
 

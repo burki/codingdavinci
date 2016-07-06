@@ -52,7 +52,7 @@ class LessExtension extends \Twig_Extension
                                       $base_dir . $less_out);
 
                 $href_css = htmlspecialchars($base_path . $less_out);
-        return <<<EOT
+                return <<<EOT
     <!-- compiled less -->
     <link rel="stylesheet" type="text/css" href="{$href_css}" />
 EOT;

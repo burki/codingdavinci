@@ -5,7 +5,8 @@ class WebApplication extends BaseApplication
 {
     protected $application;
 
-    public function __construct() {
+    public function __construct() 
+    {
         $this->container = $container = $this->setupContainer();
 
         $this->application = $app = new \Silex\Application();
@@ -93,6 +94,11 @@ class WebApplication extends BaseApplication
         // doctrine
         $app['doctrine'] = $container->get('doctrine');
 
+        $self = & $this;
+        $app['gnd-service'] = $app->share(function () use ($self) {
+            return $self->container->get('gnd-service');
+        });
+
         $app['base_path'] = $this->getBasePath();
 
         //load routes into $app
@@ -100,7 +106,9 @@ class WebApplication extends BaseApplication
         $routeLoader->bindRoutesToControllers();
     }
 
-    public function run() {
+    public function run()
+    {
         $this->application->run();
     }
+
 }

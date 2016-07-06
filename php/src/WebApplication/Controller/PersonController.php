@@ -163,10 +163,17 @@ class PersonController
                                'placeOfBirth' => $placeOfBirth,
                                'placeOfDeath' => $placeOfDeath,
                                'list' => $list,
+                               'ddb_count' => 0
                                );
 
         if (preg_match('/d\-nb\.info\/gnd\/([0-9xX]+)/', $entity->gnd, $matches)) {
             $render_params['gnd'] = $matches[1];
+            
+            $gndService = $app['gnd-service'];
+            $result = $gndService->lookup($render_params['gnd']);
+            if (false !== $result && array_key_exists('count', $result)) {
+                $render_params['ddb_count'] = $result['count'];
+            }
         }
 
         return $app['twig']->render('person.detail.twig', $render_params);

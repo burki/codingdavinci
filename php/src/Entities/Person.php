@@ -56,7 +56,6 @@ class Person extends Base
     */
     protected $academicDegree;
 
-
     /**
     * @ORM\Column(name="biographical_or_historical_information", type="string", nullable=true)
     */

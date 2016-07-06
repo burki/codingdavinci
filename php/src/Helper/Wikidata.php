@@ -18,7 +18,8 @@ class Wikidata
 
 	static $LABELS = array();
 
-	private static function getItemLabel($id, $lang_preferred) {
+	private static function getItemLabel($id, $lang_preferred)
+	{
 		// only query once
 		if (array_key_exists($lang_preferred, self::$LABELS)
 			&& array_key_exists($id, self::$LABELS[$lang_preferred]))
@@ -46,7 +47,8 @@ class Wikidata
 		}
 	}
 
-	private static function normalizePropertyValue ($value, $type, $lang) {
+	private static function normalizePropertyValue ($value, $type, $lang)
+	{
 		switch ($type) {
 			case 'item':
 				return self::getItemLabel($value, $lang);
@@ -63,7 +65,8 @@ class Wikidata
 		}
 	}
 
-	private static function getPropertyByIdentifier ($data, $identifier, $property, $lang, $unresolved = false) {
+	private static function getPropertyByIdentifier ($data, $identifier, $property, $lang, $unresolved = false)
+	{
 		$properties = $data['props'][$property];
 		if (empty($properties)) {
 			return;
@@ -78,7 +81,8 @@ class Wikidata
 	}
 
 
-	private static function getItems ($q, $properties, $lang) {
+	private static function getItems ($q, $properties, $lang)
+	{
 		// see http://wdq.wmflabs.org/api_documentation.html
 		// and https://www.penflip.com/nichtich/normdaten-in-wikidata/blob/master/wikidata-weiternutzen.txt
 

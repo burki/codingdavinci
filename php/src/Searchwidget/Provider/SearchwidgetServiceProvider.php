@@ -51,11 +51,11 @@ class SearchwidgetServiceProvider implements ServiceProviderInterface
 
 
         if (isset($app['twig'])) {
-            $app->extend('twig', function($twig, $app) {
+            $app['twig'] = $app->share($app->extend('twig', function($twig, $app) {
                 $twig->addExtension(new \Searchwidget\Twig\SearchwidgetExtension($app));
 
                 return $twig;
-            });
+            }));
         }
     }
 
