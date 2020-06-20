@@ -9,7 +9,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class PublicationController
 {
-
     public function indexAction(Request $request, BaseApplication $app)
     {
         $em = $app['doctrine'];
@@ -17,10 +16,10 @@ class PublicationController
         // we set filter/order into route-params
         $route_params = $request->attributes->get('_route_params');
 
-        $searchwidget = new \Searchwidget\Searchwidget($request, $app['session'], array('routeName' => 'publication'));
+        $searchwidget = new \Searchwidget\Searchwidget($request, $app['session'], [ 'routeName' => 'publication' ]);
 
         // build where
-        $dql_where = array();
+        $dql_where = [];
 
         $search = $searchwidget->getCurrentSearch();
 
@@ -29,19 +28,20 @@ class PublicationController
           $dql_where[] = "MATCH (P.author, P.editor, P.title, P.publicationStatement) AGAINST ('" . $fulltext_condition . "' BOOLEAN) = TRUE";
         }
 
-        $searchwidget->addFilter('completeWorks', array('all' => 'Alle Titel',
-                                                        'list' => 'Auf der Liste stehende Titel',
-                                               ));
+        $searchwidget->addFilter('completeWorks', [
+            'all' => 'Alle Titel',
+            'list' => 'Auf der Liste stehende Titel',
+        ]);
         $filters = $searchwidget->getActiveFilters();
 
         // build order
-        $searchwidget->addSortBy('authorEditor', array('label' => 'Verfasser / Herausgeber'));
-        $searchwidget->addSortBy('title', array('label' => 'Titel'));
-        $searchwidget->addSortBy('issued', array('label' => 'Publikationsjahr'));
+        $searchwidget->addSortBy('authorEditor', [ 'label' => 'Verfasser / Herausgeber' ]);
+        $searchwidget->addSortBy('title', [ 'label' => 'Titel' ]);
+        $searchwidget->addSortBy('issued', [ 'label' => 'Publikationsjahr' ]);
         $sort_by = $searchwidget->getCurrentSortBy();
-        $orders = array('authorEditorSort' => 'ASC', 'titleSort' => 'ASC', 'P.issued' => 'ASC');
+        $orders = [ 'authorEditorSort' => 'ASC', 'titleSort' => 'ASC', 'P.issued' => 'ASC' ];
         if (false !== $sort_by) {
-            $orders = array($sort_by[0] . 'Sort' => $sort_by[1]) + $orders;
+            $orders = [ $sort_by[0] . 'Sort' => $sort_by[1] ] + $orders;
         }
         // var_dump($orders);
 
@@ -91,14 +91,12 @@ class PublicationController
         $request->attributes->set('_route_params', $route_params);
 
         // display the list
-        return $app['twig']->render('publication.index.twig',
-                                    array(
-                                          'pageTitle' => 'Publikationen',
-                                          'searchwidget' => $searchwidget,
-                                          'pager' => $pagerfanta,
-                                          'entries' => $pagerfanta->getCurrentPageResults(),
-                                          )
-                                    );
+        return $app['twig']->render('publication.index.twig', [
+            'pageTitle' => 'Publikationen',
+            'searchwidget' => $searchwidget,
+            'pager' => $pagerfanta,
+            'entries' => $pagerfanta->getCurrentPageResults(),
+        ]);
     }
 
     public function detailAction(Request $request, BaseApplication $app)
@@ -120,13 +118,10 @@ class PublicationController
             $list = $em->getRepository('Entities\BannedList')->findOneByRow($row);
         }
 
-        return $app['twig']->render('publication.detail.twig',
-                                    array(
-                                          'pageTitle' => $entity->getShortTitle() . ' - Publikation',
-                                          'entry' => $entity,
-                                          'list' => $list,
-                                          )
-                                    );
+        return $app['twig']->render('publication.detail.twig', [
+            'pageTitle' => $entity->getShortTitle() . ' - Publikation',
+            'entry' => $entity,
+            'list' => $list,
+        ]);
     }
-
 }

@@ -44,18 +44,18 @@ class ApiApplication extends BaseApplication
         $app->before(function (Request $request) {
             if (0 === strpos($request->headers->get('Content-Type'), 'application/json')) {
                 $data = json_decode($request->getContent(), true);
-                $request->request->replace(is_array($data) ? $data : array());
+                $request->request->replace(is_array($data) ? $data : []);
             }
         });
 
         /*
-        $app->register(new HttpCacheServiceProvider(), array("http_cache.cache_dir" => ROOT_PATH . "/storage/cache",));
+        $app->register(new HttpCacheServiceProvider(), [ "http_cache.cache_dir" => ROOT_PATH . "/storage/cache", ]);
 
-        $app->register(new MonologServiceProvider(), array(
+        $app->register(new MonologServiceProvider(), [
             "monolog.logfile" => ROOT_PATH . "/storage/logs/" . Carbon::now('Europe/London')->format("Y-m-d") . ".log",
             "monolog.level" => $app["log.level"],
             "monolog.name" => "application"
-        ));
+        ]);
         */
 
         //load routes
@@ -65,9 +65,12 @@ class ApiApplication extends BaseApplication
         $app->error(function (\Exception $e, $code) use ($app) {
             /* $app['monolog']->addError($e->getMessage());
             $app['monolog']->addError($e->getTraceAsString()); */
-            return new JsonResponse(array("statusCode" => $code, "message" => $e->getMessage(), "stacktrace" => $e->getTraceAsString()));
+            return new JsonResponse([
+                'statusCode' => $code,
+                'message' => $e->getMessage(),
+                'stacktrace' => $e->getTraceAsString(),
+            ]);
         });
-
 
         $app['doctrine'] = $container->get('doctrine');
     }

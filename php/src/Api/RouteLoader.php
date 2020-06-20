@@ -33,8 +33,6 @@ class RouteLoader
 
     public function bindRoutesToControllers()
     {
-
-
         // http://silex.sensiolabs.org/doc/organizing_controllers.html
         $api = $this->app['controllers_factory'];
 
@@ -44,19 +42,13 @@ class RouteLoader
             return 'version 0.0';
         });
 
-        $api->get('/persons', array($this->app['person.controller'], 'getAll'));
-        // $api->get('/persons/{id}', array($this->app['person.controller'], 'getOne'));
+        $api->get('/persons', [ $this->app['person.controller'], 'getAll' ]);
+        // $api->get('/persons/{id}', [ $this->app['person.controller'], 'getOne' ]);
 
-        $api->get('/publications', array($this->app['publication.controller'], 'getAll'));
+        $api->get('/publications', [ $this->app['publication.controller'], 'getAll' ]);
 
-        $api->get('/places', array($this->app['place.controller'], 'getAll'));
+        $api->get('/places', [ $this->app['place.controller'], 'getAll' ]);
 
-        /*
-        $api->post('/notes', "notes.controller:save");
-        $api->post('/notes/{id}', "notes.controller:update");
-        $api->delete('/notes/{id}', "notes.controller:delete");
-        */
-        // $this->app['api']['endpoint'] . '/' . $this->app['api']['version']
         $this->app->mount('/v1/', $api);
     }
 }

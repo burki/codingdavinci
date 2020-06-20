@@ -33,33 +33,10 @@ class PublicationController
         return new JsonResponse($this->personService->getOne($id));
     } */
 
-    /*
-    public function save(Request $request)
-    {
-
-        $person = $this->getDataFromRequest($request);
-        return new JsonResponse(array("id" => $this->personService->save($note)));
-
-    }
-
-    public function update($id, Request $request)
-    {
-        $note = $this->getDataFromRequest($request);
-        $this->personService->update($id, $note);
-        return new JsonResponse($note);
-
-    }
-
-    public function delete($id)
-    {
-        return new JsonResponse($this->personService->delete($id));
-    }
-    */
-
     public function getDataFromRequest(Request $request)
     {
-        return $person = array(
+        return $person = [
             'person' => $request->request->get('person')
-        );
+        ];
     }
 }

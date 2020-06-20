@@ -46,7 +46,7 @@ class MysqlFulltextSimpleParser
         switch ($state) {
             // Entering the variable reference
             case LEXER_ENTER:
-                $words = array();
+                $words = [];
                 break;
 
             // Contents of the variable reference
@@ -106,7 +106,7 @@ abstract class BaseApplication
     {
         // setup Doctrine\ORM
         $isDevMode = true;
-        $paths = array('Entity');
+        $paths = [ 'Entity' ];
 
         // simple setup
         $config = \Doctrine\ORM\Tools\Setup::createAnnotationMetadataConfiguration($paths, $isDevMode);
@@ -141,7 +141,7 @@ abstract class BaseApplication
         $config->addCustomStringFunction('date_format', 'Mapado\MysqlDoctrineFunctions\DQL\MysqlDateFormat');
 
         $dbParams = $container->hasParameter('dbal')
-            ? $container->getParameter('dbal') : array();
+            ? $container->getParameter('dbal') : [];
         if (isset($dbParams['path'])) {
             $dbParams['path'] = $container->getParameterBag()->resolveValue($dbParams['path']);
         }
@@ -149,7 +149,7 @@ abstract class BaseApplication
         // create event manager and hook preferred extension listeners
         $evm = new \Doctrine\Common\EventManager();
 
-		// timestampable
+        // timestampable
         $timestampableListener = new \Gedmo\Timestampable\TimestampableListener;
         $timestampableListener->setAnnotationReader($reader);
         $evm->addEventSubscriber($timestampableListener);

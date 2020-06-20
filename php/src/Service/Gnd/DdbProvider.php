@@ -22,7 +22,7 @@ class DdbProvider implements GndProviderInterface
      * @param \Guzzle\ClientInterface $http_client
      * @param array|null $options
      */
-    public function __construct($http_client, $options = array())
+    public function __construct($http_client, $options = [])
     {
         $this->http_client = $http_client;
         $this->options = $options;
@@ -33,12 +33,12 @@ class DdbProvider implements GndProviderInterface
             return;
         }
 
-        $data = array('gnd' => $gnd,
-                      'oauth_consumer_key' => $this->options['oauth_consumer_key']
-                      );
+        $data = [
+            'gnd' => $gnd,
+            'oauth_consumer_key' => $this->options['oauth_consumer_key']
+        ];
 
-        $request = $this->http_client->createRequest('GET',
-                                                     array(self::URL_TEMPLATE, $data));
+        $request = $this->http_client->createRequest('GET', [ self::URL_TEMPLATE, $data ]);
 
         $response = $this->http_client->send($request);
         if (200 != $response->getStatusCode()) {

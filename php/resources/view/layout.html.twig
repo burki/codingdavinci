@@ -7,13 +7,13 @@
         {% if pageTitle is defined %}
             {{ pageTitle }}
         {% else %}
-            Die Liste der im Nationalsozialismus verbotenen Publikationen und Autoren
+            Die Liste der im Nationalsozialismus verbotenen Publikationen, Autoren und Verlage
         {% endif %}
         | VERBRANNTE und VERBANNTE
     </title>
     <link rel="stylesheet" href="{{ app.request.basepath }}/css/foundation.css" />
     <link rel="stylesheet" href="{{ app.request.basepath }}/css/fonts/archive.css" />
-    <link href='http://fonts.googleapis.com/css?family=Cousine:400,400italic,700,700italic' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Cousine:400,400italic,700,700italic' rel='stylesheet' type='text/css'>
 
     <link rel="stylesheet" type="text/css" href="{{ app.request.basepath }}/css/smoothness/jquery-ui-1.10.3.custom.min.css" />
     <script src="{{ app.request.basepath }}/js/vendor/modernizr.js"></script>
@@ -28,7 +28,7 @@
     <header id="banner" class="row full-width">
         <div class="large-12 columns">
             <h1 id="title"><a href="{{ path('home') }}">VERBRANNTE und VERBANNTE</a></h1>
-            <div style="font-size: small; font-family: 'Cousine', 'Courier', monospace; margin-bottom: 1em;">Die Liste der im Nationalsozialismus verbotenen Publikationen und Autoren.
+            <div style="font-size: small; font-family: 'Cousine', 'Courier', monospace; margin-bottom: 1em;">Die Liste der im Nationalsozialismus verbotenen Publikationen, Autoren und Verlage.
             </div>
         </div>
         <nav id="menu" class="row full-width">
@@ -125,7 +125,7 @@
             });
         });
     </script>
-    <!-- Piwik -->
+    <!-- Piwik
     <script type="text/javascript">
       var _paq = _paq || [];
       _paq.push(['trackPageView']);
@@ -138,8 +138,8 @@
         g.defer=true; g.async=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
       })();
     </script>
-    <noscript><p><img src="http://verbrannte-und-verbannte.de/piwik/piwik.php?idsite=1" style="border:0;" alt="" /></p></noscript>
-    <!-- End Piwik Code -->
+    <noscript><p><img src="//verbrannte-und-verbannte.de/piwik/piwik.php?idsite=1" style="border:0;" alt="" /></p></noscript>
+    End Piwik Code -->
 
   </body>
 </html>

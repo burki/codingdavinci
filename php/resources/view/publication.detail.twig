@@ -24,7 +24,13 @@
     {% endif %}
     {% if entry.__get('placeOfPublication') is not empty or entry.__get('publisher') is not empty %}
         <dt>Verleger:</dt>
-        <dd>{{ entry.__get('placeOfPublication') }} : {{ entry.__get('publisher') }}</dd>
+        <dd>{{ entry.__get('placeOfPublication') }} :
+            {% if entry.__get('publishedBy') is not null %}
+                <a href="{{ path('publisher-detail', { 'id' : entry.__get('publishedBy').__get('id') }) }}">{{ entry.__get('publisher') }}</a>
+            {% else %}
+            {{ entry.__get('publisher') }}
+            {% endif %}
+        </dd>
     {% endif %}
     {% if entry.__get('issued') is not empty %}
         <dt>Jahr:</dt>

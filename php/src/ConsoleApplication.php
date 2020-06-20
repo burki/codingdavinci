@@ -17,13 +17,13 @@ class ConsoleApplication extends BaseApplication
 
         $this->application = new \Symfony\Component\Console\Application();
 
-        $commands = array(
+        $commands = [
             new CreateCommand($container),
             new ImportCommand($container),
             new FetchCommand($container),
             new PopulateCommand($container),
             new AnalyticsCommand($container),
-        );
+        ];
 
         $this->application->addCommands($commands);
     }
@@ -46,15 +46,19 @@ abstract class BaseCommand extends Command
 
     protected function normalizeUnicode($value)
     {
-        if (!class_exists('Normalizer')) {
+        return \UtfNormal\Validator::toNFC(); // wikimedia/utfnormal
+
+        if (!class_exists('\Normalizer')) {
             return $value;
         }
-        if (!Normalizer::isNormalized($value)) {
-            $normalized = Normalizer::normalize($value);
+
+        if (!\Normalizer::isNormalized($value)) {
+            $normalized = \Normalizer::normalize($value);
             if (false !== $normalized) {
                 $value = $normalized;
             }
         }
+
         return $value;
     }
 
@@ -65,7 +69,7 @@ abstract class BaseCommand extends Command
 
     protected function readCsv($fname, $separator = ',')
     {
-        $entries = array();
+        $entries = [];
 
         $headers = false;
 
@@ -78,7 +82,7 @@ abstract class BaseCommand extends Command
                     $headers = $data;
                     continue;
                 }
-                $record = array();
+                $record = [];
                 for ($i = 0; $i < count($headers); $i++) {
                     $record[$headers[$i]] = isset($data[$i]) ? trim($data[$i]) : null;
                 }
@@ -105,10 +109,11 @@ abstract class BaseCommand extends Command
             return $this->container->get('logger');
         }
         catch (\Exception $e) {
-            $verbosityLevelMap = array(
+            $verbosityLevelMap = [
                 \Psr\Log\LogLevel::NOTICE => OutputInterface::VERBOSITY_NORMAL,
                 \Psr\Log\LogLevel::DEBUG   => OutputInterface::VERBOSITY_VERBOSE,
-            );
+            ];
+
             return new Symfony\Component\Console\Logger\ConsoleLogger($output, $verbosityLevelMap);
         }
     }
@@ -124,7 +129,7 @@ abstract class BaseCommand extends Command
      *
      * @return json object representing the query result
      */
-    protected function executeJsonQuery($url, $headers = array(), $assoc = false)
+    protected function executeJsonQuery($url, $headers = [], $assoc = false)
     {
         if (!isset($this->client)) {
             $this->client = new \EasyRdf_Http_Client();
@@ -177,20 +182,21 @@ class CreateCommand extends BaseCommand
 
         $entityManager = $this->getEntityManager();
 
-        $table_classes = array(
+        $table_classes = [
             'List' => $entityManager->getClassMetadata('Entities\BannedList'),
+            'Publisher' => $entityManager->getClassMetadata('Entities\Publisher'),
             'Publication' => $entityManager->getClassMetadata('Entities\Publication'),
             'Person' => $entityManager->getClassMetadata('Entities\Person'),
             'PublicationPerson' => $entityManager->getClassMetadata('Entities\PublicationPerson'),
-        );
+        ];
 
         $schemaManager = $entityManager->getConnection()->getSchemaManager();
         $schemaTool = new \Doctrine\ORM\Tools\SchemaTool($entityManager);
 
         try {
             foreach ($table_classes as $table => $class) {
-                if (!$schemaManager->tablesExist(array($table))) {
-                    $res = $schemaTool->createSchema(array($class));
+                if (!$schemaManager->tablesExist([ $table ])) {
+                    $res = $schemaTool->createSchema([ $class ]);
                     $logger->info("Table " . $table . " created");
                 }
                 else {
@@ -216,13 +222,13 @@ class ImportCommand extends BaseCommand
             ->addArgument(
                 'action',
                 InputArgument::OPTIONAL,
-                'table that you want to import (list / publication / publicationperson / publicationplace / place / country)'
+                'table that you want to import (list / publication / publicationperson / publicationplace / place / country / publisher)'
             )
             ->addOption(
                 'type',
                 null,
                 InputOption::VALUE_REQUIRED,
-                'specify json or csv',
+                'specify json, csv or xlsx',
                 null
                 )
             ->addOption(
@@ -299,16 +305,16 @@ class ImportCommand extends BaseCommand
                 $created = true;
                 $entity = new Entities\Publication();
                 $entity->gnd = $publication_entry['titleGND'];
-                $entity->personRefs = array();
+                $entity->personRefs = [];
             }
 
         }
 
         if ($update_existing || $created) {
-            foreach (array('title',
-                           'culturegraph', 'issued', 'completeWorks',
-                           'geonamesPlaceOfPublication',
-                           ) as $key)
+            foreach ([ 'title',
+                        'culturegraph', 'issued', 'completeWorks',
+                        'geonamesPlaceOfPublication',
+                ] as $key)
             {
                 if (array_key_exists($key, $publication_entry)) {
                     $entity->{$key} = $publication_entry[$key];
@@ -346,8 +352,7 @@ class ImportCommand extends BaseCommand
         }
 
         if ($update_existing) {
-            foreach (array('forename', 'surname',
-                           ) as $key)
+            foreach (['forename', 'surname' ] as $key)
             {
                 if (array_key_exists($key, $person)) {
                     $entity->{$key} = $person[$key];
@@ -383,15 +388,16 @@ class ImportCommand extends BaseCommand
             $entity->entry = $list_entry;
         }
 
-        foreach (array('title', 'ssFlag',
-                       'authorFirstname', 'authorLastname',
-                       'firstEditionPublisher', 'firstEditionPublicationYear', 'firstEditionPublicationPlace',
-                       'secondEditionPublisher', 'secondEditionPublicationYear', 'secondEditionPublicationPlace',
-                       'additionalInfos', 'pageNumberInOCRDocument', 'ocrResult',
-                       'correctionsAfter1938',
+        foreach ([
+                'title', 'ssFlag',
+                'authorFirstname', 'authorLastname',
+                'firstEditionPublisher', 'firstEditionPublicationYear', 'firstEditionPublicationPlace',
+                'secondEditionPublisher', 'secondEditionPublicationYear', 'secondEditionPublicationPlace',
+                'additionalInfos', 'pageNumberInOCRDocument', 'ocrResult',
+                'correctionsAfter1938',
 
-                       'titleGND', 'authorGND', 'completeWorks'
-                       ) as $key)
+                'titleGND', 'authorGND', 'completeWorks'
+            ] as $key)
         {
             if (array_key_exists($key, $list_entry)) {
                 $value = $list_entry[$key];
@@ -417,6 +423,78 @@ class ImportCommand extends BaseCommand
         return true;
     }
 
+    private function insertUpdatePublisher(&$publisher, $update_existing = true)
+    {
+        if (!empty($publisher['GND'])) {
+            $entity = $this->em->getRepository('Entities\Publisher')->findOneByGnd(trim($publisher['GND']));
+        }
+        else if (!empty($publisher['preferredName'])) {
+            $entity = $this->em->getRepository('Entities\Publisher')->findOneByPreferredName(trim($publisher['preferredName']));
+        }
+        else {
+            return false;
+        }
+
+        if (isset($entity) && !$update_existing) {
+            return true; // already done
+        }
+
+        if (!isset($entity)) {
+            // preset new entity
+            $entity = new Entities\Publisher();
+        }
+
+        foreach ([
+                'GND' => 'gnd',
+                'preferredName' => 'preferredName',
+                'alternateNames' => 'alternateNames',
+            ] as $src => $target)
+        {
+            if (array_key_exists($src, $publisher)) {
+                $value = trim($publisher[$src]);
+                if ('' === $value) {
+                    $value = null;
+                }
+                $entity->{$target} = $value;
+            }
+        }
+
+        $this->em->persist($entity);
+        $this->em->flush();
+
+        $names = [];
+        if (!empty($publisher['preferredName'])) {
+            $names[] = trim($publisher['preferredName']);
+        }
+        if (!empty($publisher['alternateNames'])) {
+            $lines = preg_split('/\s*\n\s*/', $publisher['alternateNames']);
+            foreach ($lines as $line) {
+                if ('' !== trim($line)) {
+                    $names[] = trim($line);
+                }
+            }
+        }
+
+        $publications = $this->em->getRepository('Entities\Publication')
+            ->findBy([ 'publisher' => $names ]);
+
+        foreach ($publications as $publication) {
+            $publishedBy = $publication->publishedBy;
+            if (is_null($publishedBy)) {
+                var_dump($publication->publisher);
+                var_dump($entity->preferredName);
+                $publication->publishedBy = $entity;
+                $this->em->persist($entity);
+                $this->em->flush();
+            }
+            else {
+                // var_dump($publication->publisher);
+            }
+        }
+
+        return true;
+    }
+
     private function insertUpdateCountry(&$country, $update_existing = true)
     {
         if (empty($country['iso-2'])) {
@@ -435,10 +513,11 @@ class ImportCommand extends BaseCommand
             $entity->iso2 = $country['iso-2'];
         }
 
-        foreach (array('name' => 'name',
-                       'iso-2' => 'iso2', 'iso-3' => 'iso3',
-                       'name_de' => 'germanName',
-                       ) as $src => $target)
+        foreach ([
+                'name' => 'name',
+                'iso-2' => 'iso2', 'iso-3' => 'iso3',
+                'name_de' => 'germanName',
+             ] as $src => $target)
         {
             if (array_key_exists($src, $country)) {
                 $value = $country[$src];
@@ -505,7 +584,7 @@ class ImportCommand extends BaseCommand
             }
         }
         else if ($action == 'publicationplace') {
-            $places_map = array();
+            $places_map = [];
             switch ($type) {
                 case 'tab':
                     $file = $this->getBasePath() . '/resources/data/publications_place_geonames.tsv';
@@ -523,9 +602,11 @@ class ImportCommand extends BaseCommand
                 $place_normalized = $publication['place_normalized'];
                 if (!empty($place_normalized) && isset($places_map[$place_normalized])) {
                     $geonames_id = $places_map[$place_normalized]['geonames_id'];
-                    $publication_entry = array('id' => $publication['id'],
-                                               // 'placeOfPublication' => $publication['place_of_publication'],
-                                               'geonamesPlaceOfPublication' => 'http://sws.geonames.org/' . $geonames_id . '/');
+                    $publication_entry = [
+                        'id' => $publication['id'],
+                        // 'placeOfPublication' => $publication['place_of_publication'],
+                        'geonamesPlaceOfPublication' => 'http://sws.geonames.org/' . $geonames_id . '/',
+                    ];
                     $this->insertUpdatePublicationEntry($publication_entry, $update_existing);
                 }
             }
@@ -541,9 +622,11 @@ class ImportCommand extends BaseCommand
             }
             foreach ($places_geonames as $place) {
                 $dql = 'UPDATE Entities\Place p SET p.geonames = :geonames WHERE p.name = :name AND p.countryCode = :countryCode AND p.geonames IS NULL';
-                $parameters = array('name' => $place['place'],
-                                    'countryCode' => $place['country_code'],
-                                    'geonames' => 'http://sws.geonames.org/' . $place['geonames_id'] . '/');
+                $parameters = [
+                    'name' => $place['place'],
+                    'countryCode' => $place['country_code'],
+                    'geonames' => 'http://sws.geonames.org/' . $place['geonames_id'] . '/',
+                ];
                 $query = $this->em->createQuery($dql)->setParameters($parameters);
                 $query->execute();
             }
@@ -575,6 +658,31 @@ class ImportCommand extends BaseCommand
                 $this->insertUpdatePerson($person, $update_existing);
             }
 
+        }
+        else if ($action == 'publisher') {
+            // list
+            switch ($type) {
+                case 'xlsx':
+                    $fname = $this->getBasePath() . '/resources/data/publisher.xlsx';
+
+                    $fs = new \Symfony\Component\Filesystem\Filesystem();
+
+                    if (!$fs->exists($fname)) {
+                        $output->writeln(sprintf('<error>%s does not exist</error>', $fname));
+                        return 1;
+                    }
+
+                    $file = new \SplFileObject($fname);
+                    $reader = new \Ddeboer\DataImport\Reader\ExcelReader($file);
+                    $reader->setHeaderRowNumber(0);
+                    break;
+
+                default:
+                    die('Currently not handling type ' . $type);
+            }
+            foreach ($reader as $publisher_entry) {
+                $this->insertUpdatePublisher($publisher_entry, $update_existing);
+            }
         }
         else {
             // list
@@ -639,7 +747,7 @@ class FetchCommand extends BaseCommand
 
         // find missing
         $qb = $this->em->createQueryBuilder();
-        $qb->select(array('P'))
+        $qb->select([ 'P' ])
             ->from('Entities\Publication', 'P');
         if ('dnb' == $type) {
             $qb->where('P.gnd IS NOT NULL AND (P.title IS NULL OR P.oclc IS NULL)');
@@ -667,7 +775,7 @@ class FetchCommand extends BaseCommand
                 $url = sprintf('https://openlibrary.org/api/books?bibkeys=%s&jscmd=data&format=json',
                                $bibkey);
                 $result = $this->executeJsonQuery($url,
-                                                  array('Accept' => 'application/json'));
+                                                  [ 'Accept' => 'application/json' ]);
                 if (false !== $result) {
                     if (!empty($result)) {
                         var_dump($result[$bibkey]);
@@ -700,10 +808,11 @@ class FetchCommand extends BaseCommand
                         die('TODO: handle rdf:type for ' . $url);
                     }
                     if (isset($resource)) {
-                        foreach (array(
-                                       'schema:name' => 'title',
-                                       'schema:datePublished' => 'issued',
-                                       ) as $src => $target) {
+                        foreach ([
+                                'schema:name' => 'title',
+                                'schema:datePublished' => 'issued',
+                            ] as $src => $target)
+                        {
                             $property = $resource->get($src);
                             if (isset($property) && !($property instanceof \EasyRdf_Resource)) {
                                 $value = $property->getValue();
@@ -731,11 +840,12 @@ class FetchCommand extends BaseCommand
                     $graph = new EasyRdf_Graph($url);
                     try {
                         $graph->load();
-                        foreach (array('http://purl.org/ontology/bibo/Document',
-                                       'http://purl.org/ontology/bibo/Periodical',
-                                       'http://purl.org/ontology/bibo/Collection',
-                                       'http://purl.org/ontology/bibo/Series',
-                                       ) as $rdf_type)
+                        foreach ([
+                                'http://purl.org/ontology/bibo/Document',
+                                'http://purl.org/ontology/bibo/Periodical',
+                                'http://purl.org/ontology/bibo/Collection',
+                                'http://purl.org/ontology/bibo/Series',
+                            ] as $rdf_type)
                         {
                             $resource = $graph->get($rdf_type, '^rdf:type');
                             if (isset($resource)) {
@@ -748,16 +858,17 @@ class FetchCommand extends BaseCommand
                         }
 
                         if (isset($resource)) {
-                            foreach (array(
-                                           'rda:otherTitleInformation' => 'otherTitleInformation',
-                                           'rda:placeOfPublication' => 'placeOfPublication',
-                                           'rda:publicationStatement' => 'publicationStatement',
-                                           'isbd:P1053' => 'extent',
-                                           'dc:identifier' => 'oclc',
-                                           'dc:publisher' => 'publisher',
-                                           'dcterms:issued' => 'issued',
-                                           'dcterms:bibliographicCitation' => 'bibliographicCitation',
-                                           ) as $src => $target) {
+                            foreach ([
+                                'rda:otherTitleInformation' => 'otherTitleInformation',
+                                'rda:placeOfPublication' => 'placeOfPublication',
+                                'rda:publicationStatement' => 'publicationStatement',
+                                'isbd:P1053' => 'extent',
+                                'dc:identifier' => 'oclc',
+                                'dc:publisher' => 'publisher',
+                                'dcterms:issued' => 'issued',
+                                'dcterms:bibliographicCitation' => 'bibliographicCitation',
+                                ] as $src => $target)
+                            {
                                 $property = $resource->get($src);
                                 if (isset($property) && !($property instanceof \EasyRdf_Resource)) {
                                     $value = $property->getValue();
@@ -811,7 +922,7 @@ class FetchCommand extends BaseCommand
 
             $count = $resource->countValues($key);
             if ($count > 1) {
-                $collect = array();
+                $collect = [];
                 $properties = $resource->all($key);
                 foreach ($properties as $property) {
                     $value = $property->getValue();
@@ -891,17 +1002,16 @@ class FetchCommand extends BaseCommand
                                     $persist = true;
                                     break;
                                 }
-                                else if (in_array($uri,
-                                                  array('http://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-DXDE',
-                                                        'http://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-YUCS',
-                                                        'http://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-CSXX',
-                                                        'http://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-CSHH',
-                                                        'http://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-SUHH',
-                                                        'http://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-AAAT',
-                                                        )))
+                                else if (in_array($uri, [
+                                        'http://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-DXDE',
+                                        'http://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-YUCS',
+                                        'http://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-CSXX',
+                                        'http://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-CSHH',
+                                        'http://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-SUHH',
+                                        'http://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-AAAT',
+                                    ]))
                                 {
                                     // no automatic mapping for no longer existing territories such as Deutsches Reich, Habsburg, Soviet Union or Yugoslavia, Czechoslovakia...
-
                                 }
                                 else {
                                     die($uri);
@@ -960,22 +1070,21 @@ class FetchCommand extends BaseCommand
                     if (empty($resource)) {
                         die('nothing found for ' . $place->geonames);
                     }
-                    $values = array();
-                    $this->setValuesFromResource($values, $resource,
-                                                 array('name' => 'name',
-                                                       'countryCode' => 'countryCode',
-                                                       ),
-                                                 'gn');
-                    $this->setValuesFromResource($values, $resource,
-                                 array('lat' => 'latitude',
-                                       'long' => 'longitude',
-                                       ),
-                                 'wgs84_pos');
+                    $values = [];
+                    $this->setValuesFromResource($values, $resource, [
+                            'name' => 'name',
+                            'countryCode' => 'countryCode',
+                        ], 'gn');
+                    $this->setValuesFromResource($values, $resource, [
+                            'lat' => 'latitude',
+                            'long' => 'longitude',
+                        ], 'wgs84_pos');
 
-                    foreach (array('parentADM1' => 'geonamesParentAdm1',
-                                   'parentADM2' => 'geonamesParentAdm2',
-                                   'parentADM3' => 'geonamesParentAdm3',
-                                   ) as $key => $target) {
+                    foreach ([ 'parentADM1' => 'geonamesParentAdm1',
+                                'parentADM2' => 'geonamesParentAdm2',
+                                'parentADM3' => 'geonamesParentAdm3',
+                            ] as $key => $target)
+                    {
                         $related = $resource->getResource('gn:' . $key);
                         if (isset($related)) {
                             $values[$target] = $related->getUri();
@@ -989,7 +1098,6 @@ class FetchCommand extends BaseCommand
                             $place->$target = $new_value;
                         }
                     }
-
                 }
                 catch (Exception $e) {
                 }
@@ -999,7 +1107,6 @@ class FetchCommand extends BaseCommand
                     $this->em->flush();
                 }
             }
-
         }
     }
 
@@ -1007,7 +1114,7 @@ class FetchCommand extends BaseCommand
     {
         // find missing
         $qb = $this->em->createQueryBuilder();
-        $qb->select(array('P'))
+        $qb->select([ 'P' ])
             ->from('Entities\Person', 'P')
             ->where('P.forename IS NOT NULL'
                     . (!$update ? ' AND P.gender IS NULL' : ''));
@@ -1034,7 +1141,7 @@ class FetchCommand extends BaseCommand
     {
         // find missing
         $qb = $this->em->createQueryBuilder();
-        $qb->select(array('P'))
+        $qb->select([ 'P' ])
             ->from('Entities\Person', 'P');
         if ('dnb' == $type) {
             $qb->where('P.forename IS NULL AND P.surname IS NULL AND P.gnd IS NOT NULL');
@@ -1055,12 +1162,12 @@ class FetchCommand extends BaseCommand
                 $gnd_id = $matches[1];
                 if ('wikidata' == $type) {
                     $wikidata = Helper\Wikidata::fetchByGnd($gnd_id);
-        			if (!empty($wikidata)) {
+                    if (!empty($wikidata)) {
                         var_dump($gnd_id);
                         $persist = false;
-                        foreach (array('dateOfBirth', 'dateOfDeath',
-                                       'placeOfBirth', 'placeOfDeath',
-                                       'gndPlaceOfBirth', 'gndPlaceOfDeath') as $key)
+                        foreach ([ 'dateOfBirth', 'dateOfDeath',
+                            'placeOfBirth', 'placeOfDeath',
+                            'gndPlaceOfBirth', 'gndPlaceOfDeath' ] as $key)
                         {
                             $target = $key;
                             $value = $person->$target;
@@ -1068,7 +1175,7 @@ class FetchCommand extends BaseCommand
                                 && (!empty($wikidata->$key)))
                             {
                                 $value_new = $wikidata->$key;
-                                if (in_array($key, array('gndPlaceOfBirth', 'gndPlaceOfDeath'))) {
+                                if (in_array($key, [ 'gndPlaceOfBirth', 'gndPlaceOfDeath' ])) {
                                     if (!$update) {
                                         // make sure place-values match
                                         $place_key = lcfirst(preg_replace('/^gnd/', '', $key));
@@ -1084,12 +1191,12 @@ class FetchCommand extends BaseCommand
                                 // var_dump($key . '->'.  $value_new . ' (' . $value . ')');
                             }
                         }
+
                         if ($persist) {
                             $this->em->persist($person);
                             $this->em->flush();
                         }
                     }
-
                 }
                 else if ('dnb' == $type) {
                     var_dump($person->gnd);
@@ -1108,7 +1215,7 @@ class FetchCommand extends BaseCommand
                         if (isset($resource)) {
                             $preferredNameEntityForThePerson = $resource->getResource('gnd:preferredNameEntityForThePerson');
                             if (isset($preferredNameEntityForThePerson)) {
-                                foreach (array('forename', 'surname') as $key) {
+                                foreach ([ 'forename', 'surname' ] as $key) {
                                     $property = $preferredNameEntityForThePerson->get('gnd:' . $key);
                                     if (isset($property) && !($property instanceof \EasyRdf_Resource)) {
                                         $value = $property->getValue();
@@ -1119,13 +1226,11 @@ class FetchCommand extends BaseCommand
                                     }
                                 }
                             }
-
                         }
-
                     }
                     catch (Exception $e) {
-
                     }
+
                     if ($persist) {
                         $this->em->persist($person);
                         $this->em->flush();
@@ -1136,20 +1241,18 @@ class FetchCommand extends BaseCommand
                     $url = sprintf('http://hub.culturegraph.org/entityfacts/%s',
                                    $gnd_id);
                     var_dump($url);
-                    $result = $this->executeJsonQuery($url,
-                                                      array('Accept' => 'application/json',
-                                                            'Accept-Language' => 'en-us,en', // date-format!
-                                                            ));
+                    $result = $this->executeJsonQuery($url, [
+                        'Accept' => 'application/json',
+                        'Accept-Language' => 'en-us,en', // date-format!
+                    ]);
                     if (false !== $result) {
                         $person->entityfacts = $result;
 
                         $this->em->persist($person);
                         $this->em->flush();
                     }
-
                 }
             }
-
         }
     }
 
@@ -1224,8 +1327,7 @@ class PopulateCommand extends BaseCommand
             $entity->gnd = $person['gnd'];
         }
 
-        foreach (array('listRow', 'completeWorks',
-                       ) as $key)
+        foreach ([ 'listRow', 'completeWorks' ] as $key)
         {
             if (array_key_exists($key, $person)) {
                 $entity->{$key} = $person[$key];
@@ -1261,8 +1363,7 @@ class PopulateCommand extends BaseCommand
             }
         }
 
-        foreach (array('name',
-                       ) as $key)
+        foreach ([ 'name' ] as $key)
         {
             if (array_key_exists($key, $place)) {
                 $entity->{$key} = $place[$key];
@@ -1288,8 +1389,7 @@ class PopulateCommand extends BaseCommand
             $entity->gnd = $publication['gnd'];
         }
 
-        foreach (array('title', 'listRow'
-                       ) as $key)
+        foreach ([ 'title', 'listRow' ] as $key)
         {
             if (array_key_exists($key, $publication)) {
                 $value = $publication[$key];
@@ -1321,7 +1421,7 @@ class PopulateCommand extends BaseCommand
 
             // TODO: move this action to other command
             $qb = $entityManager->createQueryBuilder();
-            $qb->select(array('P'))
+            $qb->select([ 'P' ])
                 ->from('Entities\Person', 'P')
                 ->where('P.entityfacts IS NOT NULL'
                         . (!$update ? ' AND (P.preferredName IS NULL OR P.gndPlaceOfBirth IS NULL)' : ''))
@@ -1334,14 +1434,16 @@ class PopulateCommand extends BaseCommand
                 $persist = false;
 
                 $entityfacts = $person->entityfacts;
-                foreach (array('forename' => 'forename', 'surname' => 'surname',
-                               'preferredName' => 'preferredName',
-                               'variantName' => 'variantNames',
-                               'placeOfBirth' => 'placeOfBirth',
-                               // 'placeOfActivity' => 'placeOfActivity', // can be multiple
-                               'placeOfDeath' => 'placeOfDeath',
-                               'biographicalOrHistoricalInformation' => 'biographicalOrHistoricalInformation',
-                               ) as $key => $target) {
+                foreach ([
+                        'forename' => 'forename', 'surname' => 'surname',
+                        'preferredName' => 'preferredName',
+                        'variantName' => 'variantNames',
+                        'placeOfBirth' => 'placeOfBirth',
+                        // 'placeOfActivity' => 'placeOfActivity', // can be multiple
+                        'placeOfDeath' => 'placeOfDeath',
+                        'biographicalOrHistoricalInformation' => 'biographicalOrHistoricalInformation',
+                    ] as $key => $target)
+                {
                     $value = $person->$target;
                     if (($update || empty($value)) && (!empty($entityfacts['person'][$key]))) {
                         $persist = true;
@@ -1355,7 +1457,6 @@ class PopulateCommand extends BaseCommand
                             else {
                                 $value = join("\n", $entityfacts['person'][$key]);
                             }
-
                         }
                         else {
                             $value = $entityfacts['person'][$key];
@@ -1377,7 +1478,7 @@ class PopulateCommand extends BaseCommand
                             break;
                     }
                 }
-                foreach (array('dateOfBirth', 'dateOfDeath') as $key) {
+                foreach ([ 'dateOfBirth', 'dateOfDeath' ] as $key) {
                     $value = $person->{$key};
                     if ((empty($value) || $value === '0000-00-00')
                         && !empty($entityfacts['person'][$key]))
@@ -1429,7 +1530,7 @@ class PopulateCommand extends BaseCommand
 
             // find missing person
             $qb = $entityManager->createQueryBuilder();
-            $qb->select(array('BL', 'P'))
+            $qb->select([ 'BL', 'P' ])
                 ->from('Entities\BannedList', 'BL')
                 ->leftJoin('Entities\Person', 'P',
                            \Doctrine\ORM\Query\Expr\Join::WITH, 'BL.authorGND = P.gnd')
@@ -1447,8 +1548,10 @@ class PopulateCommand extends BaseCommand
                     continue;
                 }
                 $gnd = $result->authorGND;
-                $person_record = array('gnd' => $gnd, 'listRow' => $result->row,
-                                       'completeWorks' => $result->completeWorks);
+                $person_record = [
+                    'gnd' => $gnd, 'listRow' => $result->row,
+                    'completeWorks' => $result->completeWorks,
+                ];
                 $this->insertUpdatePerson($person_record, $update_existing);
             }
         }
@@ -1457,7 +1560,7 @@ class PopulateCommand extends BaseCommand
 
             // find missing Place
             $qb = $entityManager->createQueryBuilder();
-            $qb->select(array('Person', 'P1', 'P2'))
+            $qb->select([ 'Person', 'P1', 'P2' ])
                 ->from('Entities\Person', 'Person')
                 ->leftJoin('Entities\Place', 'P1',
                            \Doctrine\ORM\Query\Expr\Join::WITH, 'P1.gnd=Person.gndPlaceOfBirth')
@@ -1476,17 +1579,17 @@ class PopulateCommand extends BaseCommand
                 if (!isset($result)) {
                     continue;
                 }
-                foreach (array('placeOfBirth', 'placeOfDeath') as $key) {
+                foreach ([ 'placeOfBirth', 'placeOfDeath' ] as $key) {
                     $gnd = $result->__get('gnd' . ucfirst($key));
                     if (!is_null($gnd)) {
-                        $place_record = array('gnd' => $gnd,
-                                              'name' => $result->$key);
+                        $place_record = [
+                            'gnd' => $gnd,
+                            'name' => $result->$key,
+                        ];
                         var_dump($place_record);
                         // exit;
                         $this->insertUpdatePlace($place_record, $update_existing);
-
                     }
-
                 }
             }
         }
@@ -1495,7 +1598,7 @@ class PopulateCommand extends BaseCommand
 
             // find missing Place
             $qb = $entityManager->createQueryBuilder();
-            $qb->select(array('Publication', 'P1'))
+            $qb->select([ 'Publication', 'P1' ])
                 ->from('Entities\Publication', 'Publication')
                 ->leftJoin('Entities\Place', 'P1',
                            \Doctrine\ORM\Query\Expr\Join::WITH, 'P1.geonames=Publication.geonamesPlaceOfPublication')
@@ -1512,10 +1615,10 @@ class PopulateCommand extends BaseCommand
                 if (!isset($result)) {
                     continue;
                 }
-                foreach (array('placeOfPublication') as $key) {
+                foreach ([ 'placeOfPublication' ] as $key) {
                     $geonames = $result->__get('geonames' . ucfirst($key));
                     if (!is_null($geonames)) {
-                        $place_record = array('geonames' => $geonames);
+                        $place_record = [ 'geonames' => $geonames ];
                         var_dump($place_record);
                         $this->insertUpdatePlace($place_record, $update_existing);
                     }
@@ -1556,7 +1659,7 @@ class PopulateCommand extends BaseCommand
             $update = true; // todo: get from option
             // find Publication without author / editor
             $qb = $entityManager->createQueryBuilder();
-            $qb->select(array('P'))
+            $qb->select([ 'P' ])
                 ->from('Entities\Publication', 'P')
                 ->where('P.author IS NULL AND P.editor IS NULL')
                 // ->setMaxResults(100)
@@ -1570,11 +1673,11 @@ class PopulateCommand extends BaseCommand
                 if (!isset($publication) || 0 == count($publication->personRefs)) {
                     continue;
                 }
-                $authors = $editors = array();
+                $authors = $editors = [];
                 foreach ($publication->personRefs as $personRef) {
                     $person = $personRef->person;
-                    $name_parts = array();
-                    foreach (array('surname', 'forename') as $key) {
+                    $name_parts = [];
+                    foreach ([ 'surname', 'forename' ] as $key) {
                         $value = $person->$key;
                         if (!empty($value)) {
                             $name_parts[] = $value;
@@ -1616,7 +1719,7 @@ class PopulateCommand extends BaseCommand
         else {
             // find missing publications
             $qb = $entityManager->createQueryBuilder();
-            $qb->select(array('BL', 'P'))
+            $qb->select([ 'BL', 'P' ])
                 ->from('Entities\BannedList', 'BL')
                 ->leftJoin('Entities\Publication', 'P',
                            \Doctrine\ORM\Query\Expr\Join::WITH, 'BL.titleGND = P.gnd')
@@ -1632,7 +1735,7 @@ class PopulateCommand extends BaseCommand
                     continue;
                 }
                 $gnd = $result->titleGND;
-                $publication_record = array('gnd' => $gnd, 'listRow' => $result->row);
+                $publication_record = [ 'gnd' => $gnd, 'listRow' => $result->row ];
                 $this->insertUpdatePublication($publication_record);
             }
         }
@@ -1683,13 +1786,13 @@ class AnalyticsCommand extends BaseCommand
                       . ' ORDER BY country_code, Place.name'
                       ;
             $stmt = $dbconn->query($querystr);
-            $death_by_country = array();
+            $death_by_country = [];
             while ($row = $stmt->fetch()) {
                 $deathplaces_by_country[$row['country_code']][$row['gnd']] = $row['name'];
             }
-            $missingplaces_by_country = array();
+            $missingplaces_by_country = [];
 
-            $dependencies = array();
+            $dependencies = [];
             foreach ($deathplaces_by_country as $country_code => $places) {
                 foreach ($places as $gnd => $place) {
                     // find all birth-places as dependencies
@@ -1699,7 +1802,7 @@ class AnalyticsCommand extends BaseCommand
                               . " AND Person.complete_works <> 0"
                               . ' GROUP BY Country.iso3, Place.name';
                     $stmt = $dbconn->query($querystr);
-                    $dependencies_by_place = array();
+                    $dependencies_by_place = [];
                     while ($row = $stmt->fetch()) {
                         // add to $missingplaces_by_country if not already in $death_by_country
                         if (!isset($deathplaces_by_country[$row['country_code']])
@@ -1711,38 +1814,41 @@ class AnalyticsCommand extends BaseCommand
                         $dependencies_by_place[] = $place_key;
                     }
                     $place_key = 'place.' . $country_code . '.' . $this->stripGnd($gnd);
-                    $entry = array("name" => $place_key,
-                                   "label" => $place,
-                                   "size" => 1,
-                                   "imports" => array(),
-                                   );
+                    $entry = [
+                        'name' => $place_key,
+                        'label' => $place,
+                        'size' => 1,
+                        'imports' => [],
+                    ];
+
                     if (!empty($dependencies_by_place)) {
                         $entry["imports"] = $dependencies_by_place;
                     }
 
                     $dependencies[] = $entry;
-
                 }
             }
 
             foreach ($missingplaces_by_country as $country_code => $places) {
                 foreach ($places as $gnd => $place) {
                     $place_key = $country_code . '.' . $this->stripGnd($gnd);
-                    $entry = array("name" => 'place.' . $place_key,
-                                   "label" => $place,
-                                   "size" => 1,
-                                   "imports" => array(),
-                                   );
+                    $entry = [
+                        'name' => 'place.' . $place_key,
+                        'label' => $place,
+                        'size' => 1,
+                        'imports' => [],
+                    ];
                     $dependencies[] = $entry;
                 }
             }
+
             echo json_encode($dependencies);
         }
         else if ($action == 'kml') {
             $dbconn = $this->em->getConnection();
 
-            $union_parts = array();
-            foreach (array('birth', 'death') as $type) {
+            $union_parts = [];
+            foreach ([ 'birth', 'death' ] as $type) {
                 $template = "SELECT '%s' AS type, Person.forename, Person.surname, Person.date_of_%s AS person_date, Place.name AS name, Place.latitude, Place.longitude"
                           . ' FROM Person JOIN Place ON Person.gnd_place_of_%s=Place.gnd'
                           . ' WHERE Person.status >= 0 AND Place.latitude IS NOT NULL AND Person.date_of_%s IS NOT NULL'
@@ -1752,13 +1858,14 @@ class AnalyticsCommand extends BaseCommand
                 $union_parts[] = sprintf($template,
                                          $type, $type, $type, $type);
             }
+
             $querystr = implode(' UNION ALL ', $union_parts)
                       . ' HAVING person_date IS NOT NULL'
                       . ' ORDER BY type, person_date'
                       // . ' LIMIT 10'
                       ;
             $stmt = $dbconn->query($querystr);
-            $death_by_country = array();
+            $death_by_country = [];
             $last_type = '';
             $ret = <<<EOT
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>

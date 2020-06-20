@@ -16,7 +16,7 @@ namespace Searchwidget\View\Template;
  */
 class DefaultTemplate extends Template
 {
-    static protected $defaultOptions = array(
+    static protected $defaultOptions = [
         'css_disabled_class' => 'disabled',
         'css_active_class'  => 'active',
         'input_text_template' => '<input id="%id%" name="%name%" value="%value%" placeholder="%placeholder%" /><input type="submit" value="Los" />',
@@ -25,7 +25,7 @@ class DefaultTemplate extends Template
         'sort_by_template'   => '<a class="btn sort %direction%" data-sort="%name%" href="%href%">Sortiere nach %label%</a>',
         'filter_by_template'   => '<a class="btn %active%" data-filter="%name%" href="%href%">%label%</a>',
         // 'span_template'      => '<span class="%class%">%text%</span>' */
-    );
+    ];
 
     public function container()
     {
@@ -34,19 +34,20 @@ class DefaultTemplate extends Template
 
     public function form()
     {
-        $search = array('%action%', '%method%');
-        $replace = array($this->generateRoute(), 'POST');
+        $search = [ '%action%', '%method%' ];
+        $replace = [ $this->generateRoute(), 'POST' ];
 
         return str_replace($search, $replace, $this->option('form_template'));
     }
 
-    public function search($name = 'search', $options = array())
+    public function search($name = 'search', $options = [])
     {
         // default
-        $search_replace = array('%id%' => $name, '%name%' => $name,
-                                '%placeholder%' => '',
-                                '%value%' => '',
-                                );
+        $search_replace = [
+            '%id%' => $name, '%name%' => $name,
+            '%placeholder%' => '',
+            '%value%' => '',
+        ];
 
         foreach ($options as $key => $value) {
             $search_replace['%' . $key . '%'] = $this->escape($value);
@@ -81,11 +82,11 @@ class DefaultTemplate extends Template
         $routeParams['sort'] = $name . ':' . $direction;
         // var_dump($routeParams);
 
-        $search_replace = array(
+        $search_replace = [
             '%label%' => $this->escape($label),
             '%href%' => $this->escape($this->generateRoute($routeParams)),
             '%direction%' => $current_sort[0] == $name ? $current_sort[1] : '',
-        );
+        ];
 
         return str_replace(array_keys($search_replace),
                            array_values($search_replace),
@@ -101,7 +102,7 @@ class DefaultTemplate extends Template
                                    $request->attributes->get('_route_params'));
         $routeParams['page'] = 1;
 
-        $filter_options = array();
+        $filter_options = [];
         foreach ($options as $option_name => $option_descr) {
             $routeParams[$name] = $option_name;
 
@@ -112,11 +113,11 @@ class DefaultTemplate extends Template
                 $label = $option_descr;
             }
 
-            $search_replace = array(
+            $search_replace = [
                 '%label%' => $this->escape($label),
                 '%href%' => $this->escape($this->generateRoute($routeParams)),
                 '%active%' => isset($active) && $active == $option_name ? 'active' : '',
-            );
+            ];
 
             $filter_options[] = str_replace(array_keys($search_replace),
                                             array_values($search_replace),

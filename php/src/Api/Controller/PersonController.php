@@ -18,7 +18,7 @@ class PersonController
         // Select your items.
         $dql = "SELECT P.id, P.surname, P.forename, P.dateOfBirth, P.dateOfDeath, IFNULL(P.surname, 'ZZ') HIDDEN surnameSort FROM Entities\Person P";
 
-        $conditions = array();
+        $conditions = [];
         $q = $request->get('q');
         if (!empty($q)) {
             $conditions['q'] = $q;
@@ -50,38 +50,10 @@ class PersonController
         return new JsonResponse($result = $query->getArrayResult());
     }
 
-    /* public function getOne($id)
-    {
-        return new JsonResponse($this->personService->getOne($id));
-    } */
-
-    /*
-    public function save(Request $request)
-    {
-
-        $person = $this->getDataFromRequest($request);
-        return new JsonResponse(array("id" => $this->personService->save($note)));
-
-    }
-
-    public function update($id, Request $request)
-    {
-        $note = $this->getDataFromRequest($request);
-        $this->personService->update($id, $note);
-        return new JsonResponse($note);
-
-    }
-
-    public function delete($id)
-    {
-        return new JsonResponse($this->personService->delete($id));
-    }
-    */
-
     public function getDataFromRequest(Request $request)
     {
-        return $person = array(
+        return $person = [
             'person' => $request->request->get('person')
-        );
+        ];
     }
 }

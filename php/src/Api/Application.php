@@ -14,27 +14,26 @@ class Application extends BaseApplication
 
         $this->register(new \Igorw\Silex\ConfigServiceProvider(ROOT_PATH . "/resources/config/$env.yaml"));
 
-        $this->register(new \Silex\Provider\DoctrineServiceProvider(), array(
+        $this->register(new \Silex\Provider\DoctrineServiceProvider(), [
             'db.options' => $this['database'],
-        ));
+        ]);
 
-        $this->register(new \Dflydev\Silex\Provider\DoctrineOrm\DoctrineOrmServiceProvider, array(
-           // "orm.proxies_dir" => "/path/to/proxies",
-            "orm.em.options" => array(
-                "mappings" => array(
+        $this->register(new \Dflydev\Silex\Provider\DoctrineOrm\DoctrineOrmServiceProvider, [
+           // 'orm.proxies_dir' => "/path/to/proxies",
+            'orm.em.options' => [
+                'mappings' => [
                     // Using actual filesystem paths
-                    array(
-                        "type" => "annotation",
-                        "namespace" => "App\Entities",
-                        "path" => ROOT_PATH ."/src/App/Entities",
-                    ),
-                ),
-            ),
-        ));
+                    [
+                        'type' => 'annotation',
+                        'namespace' => 'App\Entities',
+                        'path' => ROOT_PATH . '/src/App/Entities',
+                    ],
+                ],
+            ],
+        ]);
 
         //load services
         $servicesLoader = new ServicesLoader($this);
         $servicesLoader->bindServicesIntoContainer();
     }
-
 }

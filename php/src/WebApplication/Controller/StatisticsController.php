@@ -14,7 +14,7 @@ class StatisticsController
       // see http://stackoverflow.com/questions/790596/split-a-text-into-single-words
         $tokens = $split
             ? preg_split('/((^\p{P}+)|(\p{P}*\s+\p{P}*)|(\p{P}+$))/u', $text, -1, PREG_SPLIT_NO_EMPTY)
-            : array($text);
+            : [ $text ];
 
         foreach ($tokens as $match) {
             $match = mb_strtolower($match, 'UTF-8');
@@ -33,6 +33,7 @@ class StatisticsController
         if ($a['percentage'] == $b['percentage']) {
             return 0;
         }
+
         return ($a['percentage'] > $b['percentage']) ? -1 : 1;
     }
 
@@ -60,7 +61,7 @@ class StatisticsController
         $querystr .= " UNION SELECT 'total' AS type, COUNT(*) AS how_many"
                    . " FROM Person WHERE status >= 0";
         $stmt = $dbconn->query($querystr);
-        $subtitle_parts = array();
+        $subtitle_parts = [];
         while ($row = $stmt->fetch()) {
           if ('active' == $row['type']) {
             $total_active = $row['how_many'];
@@ -69,9 +70,9 @@ class StatisticsController
         }
         $subtitle = implode(' von ', $subtitle_parts) . ' Personen';
 
-        $data = array();
+        $data = [];
         $max_year = $min_year = 0;
-        foreach (array('birth', 'death') as $key) {
+        foreach ([ 'birth', 'death' ] as $key) {
             $date_field = 'date_of_' . $key;
             $querystr = 'SELECT YEAR(' . $date_field . ') AS year'
                       // . ', sex'
@@ -85,7 +86,6 @@ class StatisticsController
                       ;
             $stmt = $dbconn->query($querystr);
 
-
             while ($row = $stmt->fetch()) {
                 if (0 == $min_year || $row['year'] < $min_year) {
                     $min_year = $row['year'];
@@ -94,12 +94,12 @@ class StatisticsController
                     $max_year = $row['year'];
                 }
                 if (!isset($data[$row['year']])) {
-                    $data[$row['year']] = array();
+                    $data[$row['year']] = [];
                 }
                 $data[$row['year']][$key] = $row['how_many'];
             }
-
         }
+
         if ($min_year < 1830) {
             $min_year = 1830;
         }
@@ -132,26 +132,26 @@ class StatisticsController
             $data[$row['year']][$key] = $row['how_many'];
         }
 
-        $categories = array();
+        $categories = [];
         for ($year = $min_year; $year <= $max_year; $year++) {
             $categories[] = 0 == $year % 5 ? $year : '';
-            foreach (array('birth', 'death',
-                           /* 'works', */ 'works_issued_base', 'works_issued_extended')
-                     as $key) {
+            foreach ([ 'birth', 'death',
+                           /* 'works', */ 'works_issued_base', 'works_issued_extended'
+                ] as $key)
+            {
                 $total[$key][$year] = isset($data[$year][$key])
                     ? intval($data[$year][$key]) : 0;
             }
         }
 
-        return $app['twig']->render('statistics.year.twig',
-                                    array(
-                                        'subtitle' => json_encode($subtitle),
-                                        'categories' => json_encode($categories),
-                                        'person_birth' => json_encode(array_values($total['birth'])),
-                                        'person_death' => json_encode(array_values($total['death'])),
-                                        'works_base' => json_encode(array_values($total['works_issued_base'])),
-                                        'works_extended' => json_encode(array_values($total['works_issued_extended'])),
-                                    ));
+        return $app['twig']->render('statistics.year.twig', [
+            'subtitle' => json_encode($subtitle),
+            'categories' => json_encode($categories),
+            'person_birth' => json_encode(array_values($total['birth'])),
+            'person_death' => json_encode(array_values($total['death'])),
+            'works_base' => json_encode(array_values($total['works_issued_base'])),
+            'works_extended' => json_encode(array_values($total['works_issued_extended'])),
+        ]);
     }
 
     public function wordCountAction(Request $request, BaseApplication $app)
@@ -161,12 +161,13 @@ class StatisticsController
         $dbconn = $em->getConnection();
 
         // preset custom stopwords
-        $stopwords = array('roman' => true,
-                           'gesammelte' => true, 'werke' => true,
-                           'schriften' => true, 'ausgewählte' => true,
-                           'the' => true, 'and' => true,
-                           'van' => true,
-                           );
+        $stopwords = [
+            'roman' => true,
+            'gesammelte' => true, 'werke' => true,
+            'schriften' => true, 'ausgewählte' => true,
+            'the' => true, 'and' => true,
+            'van' => true,
+        ];
 
         $words = file($app['base_path'] . '/resources/data/stopwords_de.txt',
                       FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -174,7 +175,7 @@ class StatisticsController
             $stopwords[$word] = true;
         }
 
-        $fields = array('title', 'other_title_information');
+        $fields = [ 'title', 'other_title_information' ];
         $querystr = "SELECT issued, " . implode(', ', $fields) . " FROM Publication"
                   . " WHERE Publication.status >= 0"
             ;
@@ -183,7 +184,7 @@ class StatisticsController
         $stemmer = new TrivialStemmer();
 
         $group_by_date = true;
-        $words = array('total' => array());
+        $words = [ 'total' => [] ];
         while ($row = $stmt->fetch()) {
             foreach ($fields as $field) {
                 if (!empty($row[$field])) {
@@ -216,19 +217,22 @@ class StatisticsController
         arsort($words['total']);
         $types = array_keys($words);
 
-        $categories = $total = array();
+        $categories = $total = [];
         foreach ($words['total'] as $word => $count) {
             if (count($categories) > 60) {
                 // 60 terms
                 break;
             }
+
             if (isset($stopwords[$word]) && $word) {
                 continue;
             }
+
             if (mb_strlen($word, 'UTF-8') <= 2) {
                 // skip short works
                 continue;
             }
+
             $categories[] = $word;
             $total['total'][] = $count;
             if ($group_by_date) {
@@ -237,17 +241,20 @@ class StatisticsController
                         continue;
                     }
                     if (!isset($total[$type])) {
-                        $total[$type] = array();
+                        $total[$type] = [];
                     }
                     $total[$type][] = isset($words[$type][$word]) ? $words[$type][$word] : 0;
                 }
             }
         }
+
         $subtitle = $group_by_date ? 'nach Jahrzehnten' : '';
 
-        $render_values = array('subtitle' => json_encode($subtitle),
-                               'categories' => json_encode($categories),
-                               );
+        $render_values = [
+            'subtitle' => json_encode($subtitle),
+            'categories' => json_encode($categories),
+        ];
+
         if ($group_by_date) {
             foreach ($types as $type) {
                 if ('total' == $type) {
@@ -261,9 +268,7 @@ class StatisticsController
         }
 
 
-        return $app['twig']->render('statistics.wordcount.twig',
-                                    $render_values
-                                    );
+        return $app['twig']->render('statistics.wordcount.twig', $render_values);
     }
 
     public function placeCountAction(Request $request, BaseApplication $app)
@@ -273,22 +278,26 @@ class StatisticsController
         $dbconn = $em->getConnection();
 
         // preset custom stopwords
-        $stopwords = array(
-                           );
+        $stopwords = [];
 
-        $words = array();
+        $words = [];
         foreach ($words as $word) {
             $stopwords[$word] = true;
         }
 
-        $keys = array('birth', 'death');
-        $words = array('total' => array(), 'birth_rest' => array(), 'death_rest' => array());
+        $keys = [ 'birth', 'death' ];
+        $words = [
+            'total' => [],
+            'birth_rest' => [],
+            'death_rest' => [],
+        ];
+
         foreach ($keys as $key) {
-            $fields = array('place_of_' . $key);
+            $fields = [ 'place_of_' . $key ];
             $querystr = "SELECT YEAR(date_of_" . $key . ") AS issued, "
                       . implode(', ', $fields) . " FROM Person"
                       . " WHERE Person.status >= 0"
-                ;
+                      ;
             $stmt = $dbconn->query($querystr);
 
             $stemmer = new TrivialStemmer();
@@ -302,18 +311,23 @@ class StatisticsController
                             $cat = $key . '_rest';
                             if (isset($row['issued'])) {
                                 if ('birth' == $key) {
-                                    if ($row['issued'] < 1890)
+                                    if ($row['issued'] < 1890) {
                                         $cat = $key . '_1890';
-                                    else if ($row['issued'] >= 1890)
+                                    }
+                                    else if ($row['issued'] >= 1890) {
                                         $cat = $key . '1890_';
+                                    }
                                 }
                                 else {
-                                    if ($row['issued'] < 1933)
+                                    if ($row['issued'] < 1933) {
                                         $cat = $key . '_33';
-                                    else if ($row['issued'] >= 1933 && $row['issued'] <= 1945)
+                                    }
+                                    else if ($row['issued'] >= 1933 && $row['issued'] <= 1945) {
                                         $cat = $key . '33_45';
-                                    else if ($row['issued'] > 1945)
+                                    }
+                                    else if ($row['issued'] > 1945) {
                                         $cat = $key . '45_';
+                                    }
                                 }
                             }
                             $this->addWordCount($words[$cat], $row[$field], $stemmer, false);
@@ -321,13 +335,12 @@ class StatisticsController
                     }
                 }
             }
-
         }
 
         arsort($words['total']);
         $types = array_keys($words);
 
-        $categories = $total = array();
+        $categories = $total = [];
         foreach ($words['total'] as $word => $count) {
             if (count($categories) > 60) {
                 // 60 places
@@ -348,17 +361,20 @@ class StatisticsController
                         continue;
                     }
                     if (!isset($total[$type])) {
-                        $total[$type] = array();
+                        $total[$type] = [];
                     }
                     $total[$type][] = isset($words[$type][$word]) ? $words[$type][$word] : 0;
                 }
             }
         }
+
         $subtitle = $group_by_date ? 'nach Epochen' : '';
 
-        $render_values = array('subtitle' => json_encode($subtitle),
-                               'categories' => json_encode($categories),
-                               );
+        $render_values = [
+            'subtitle' => json_encode($subtitle),
+            'categories' => json_encode($categories),
+        ];
+
         if ($group_by_date) {
             foreach ($types as $type) {
                 if ('total' == $type) {
@@ -371,10 +387,7 @@ class StatisticsController
             $render_values['word_total'] = json_encode(array_values($total['total']));
         }
 
-        return $app['twig']->render('statistics.placecount.twig',
-                                    $render_values
-                                    );
-
+        return $app['twig']->render('statistics.placecount.twig', $render_values);
     }
 
     public function leafletOrtAction(Request $request, BaseApplication $app)
@@ -394,15 +407,15 @@ class StatisticsController
                   // . ' ORDER BY PublicationPerson.publication_ord, Publication.complete_works = 0'
                   ;
         $stmt = $dbconn->query($querystr);
-        $publications_by_country = array();
-        $country_names_de = array();
+        $publications_by_country = [];
+        $country_names_de = [];
         while ($row = $stmt->fetch()) {
             $publications_by_country[$row['country_code']] = $row['how_many'];
             $country_names_de[$row['country_code']] = $row['name_de'];
         }
         $file = $app['base_path'] . '/resources/data/countries.geo.json';
         $features = json_decode(file_get_contents($file), true);
-        $remove = array();
+        $remove = [];
         for ($i = 0; $i < count($features['features']); $i++) {
             $feature = & $features['features'][$i];
             if (array_key_exists($feature['id'], $publications_by_country)) {
@@ -416,19 +429,20 @@ class StatisticsController
                 $remove[] = $i;
             }
         }
+
         foreach ($features['features'] as $i => $dummy) {
             if (in_array($i, $remove)) {
                 unset($features['features'][$i]);
             }
         }
+
         $features['features'] = array_values($features['features']); // re-index after removal
         $features_json = json_encode($features);
 
         $content = <<<EOT
     <div id="map" style="width:800px; height: 450px; position: relative;"></div>
-	<script>
-        L.mapbox.accessToken = 'pk.eyJ1IjoidmVyYnJhbm50ZS12ZXJiYW5udGUiLCJhIjoiUXUtM1ZhTSJ9.os53GU9yi7z-QQ5zv2vU-A';
-		var map = L.map('map');
+    <script>
+        var map = L.map('map');
 
         map.fitBounds([
             [-45, -130],
@@ -523,13 +537,16 @@ class StatisticsController
 
         info.addTo(map);
 
-		L.tileLayer('https://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png', {
-			maxZoom: 18,
-			attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
-				'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
-				'Imagery &copy; <a href="http://mapbox.com">Mapbox</a>',
-			id: 'verbrannte-verbannte.k11eddb9'
-		}).addTo(map);
+        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+            tileSize: 512,
+            maxZoom: 18,
+            zoomOffset: -1,
+            attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+                '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+                'Imagery &copy; <a href="http://mapbox.com">Mapbox</a>',
+            id: 'verbrannte-verbannte/ck9myxibl0abt1io1e0u7joni', // 'mapbox/outdoors-v11',
+            accessToken: 'pk.eyJ1IjoidmVyYnJhbm50ZS12ZXJiYW5udGUiLCJhIjoiUXUtM1ZhTSJ9.os53GU9yi7z-QQ5zv2vU-A'
+        }).addTo(map);
 
         var countriesData = ${features_json};
 
@@ -538,15 +555,13 @@ class StatisticsController
                 style: style,
                 onEachFeature: onEachFeature
             }).addTo(map);
-	</script>
+    </script>
 
 EOT;
         // display the static content
-        return $app['twig']->render('static.leaflet.twig',
-                                    array(
-                                          'content' => $content,
-                                          )
-                                    );
+        return $app['twig']->render('static.leaflet.twig', [
+            'content' => $content,
+        ]);
     }
 
     public function personenWikipediaAction(Request $request, BaseApplication $app)
@@ -555,7 +570,7 @@ EOT;
 
         $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         $first = true;
-        $data = array();
+        $data = [];
         foreach ($lines as $line) {
             if ($first) {
                 // skip header
@@ -567,38 +582,36 @@ EOT;
                 // no wiki article or no hits
                 continue;
             }
-            $single_data = array(
+            $single_data = [
                 'name' => $values[1], // article
                 'x' => (int)$values[2], // HITS (btw 2014/05/28 and 2014/06/26)
                 'y' => (int)$values[5], // WORD_COUNT (on 2014/06/28)
-            );
+            ];
             $data[] = $single_data;
         }
+
         // display the static content
-        return $app['twig']->render('statistics.wikipedia.twig',
-                                    array(
-                                          'data' => json_encode($data),
-                                          )
-                                    );
+        return $app['twig']->render('statistics.wikipedia.twig', [
+            'data' => json_encode($data),
+        ]);
     }
 
     public function d3jsOrtAction(Request $request, BaseApplication $app)
     {
         $content = '';
         // display the static content
-        return $app['twig']->render('static.d3js.twig',
-                                    array(
-                                          'content' => $content,
-                                          )
-                                    );
+        return $app['twig']->render('static.d3js.twig', [
+            'content' => $content,
+        ]);
     }
 }
 
 class TrivialStemmer
 {
-    static $map = array(
-                        //'stillleben' => 'stilleben'
-                        );
+    static $map = [
+        //'stillleben' => 'stilleben'
+    ];
+
     function apply ($word) {
         return isset(self::$map[$word]) ? self::$map[$word] : $word;
     }
