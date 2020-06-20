@@ -2,20 +2,20 @@
 
 namespace Service\Gender;
 
-
-class MergingChainProvider implements GenderProviderInterface
+class MergingChainProvider
+implements GenderProviderInterface
 {
     /**
      * @var GenderProviderInterface[]
      */
-    private $providers = array();
+    private $providers = [];
 
     /**
      * Constructor
      *
      * @param GenderProviderInterface[] $providers
      */
-    public function __construct(array $providers = array())
+    public function __construct(array $providers = [])
     {
         $this->providers = $providers;
     }
@@ -39,13 +39,15 @@ class MergingChainProvider implements GenderProviderInterface
 
     protected function buildAggregateResult($name, &$processed, &$todo) {
         if (is_array($name)) {
-            $results = array();
+            $results = [];
             foreach ($name as $single_name) {
                 $results[] = isset($processed[$single_name])
                     ? $processed[$single_name] : $todo[$single_name];
             }
+
             return $results;
         }
+
         return isset($processed[$name]) ? $processed[$name] : $todo[$name];
     }
 
@@ -53,12 +55,15 @@ class MergingChainProvider implements GenderProviderInterface
         if (empty($result_a)) {
             return $result_b;
         }
+
         if (empty($result_b)) {
             return $result_a;
         }
+
         if (!isset($result_a->probability)) {
             return $result_b;
         }
+
         if (!isset($result_b->probability)) {
             return $result_a;
         }
@@ -76,19 +81,19 @@ class MergingChainProvider implements GenderProviderInterface
             return;
         }
 
-        $exceptions = array();
+        $exceptions = [];
 
-        $processed = array();
-        $todo = array();
+        $processed = [];
+        $todo = [];
         $multiple = false;
         if (is_array($name)) {
             $multiple = true;
             foreach ($name as $single_name) {
-                $todo[$single_name] = array();
+                $todo[$single_name] = [];
             }
         }
         else {
-            $todo[$name] = array();
+            $todo[$name] = [];
         }
 
         foreach ($this->providers as $provider) {
@@ -111,14 +116,16 @@ class MergingChainProvider implements GenderProviderInterface
                                 $todo[$names[$i]] = $this->compareSingle($results[$i], $todo[$names[$i]]);
                             }
                         }
+
                         if (empty($todo)) {
                             return $this->buildAggregateResult($name, $processed, $todo);
                         }
                     }
                     else {
                         if ($this->checkSingle($results)) {
-                            return $multiple ? array($results) : $results;
+                            return $multiple ? [ $results ] : $results;
                         }
+
                         $todo[$names] = $this->compareSingle($results, $todo[$names]);
                     }
                 }

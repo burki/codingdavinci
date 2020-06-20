@@ -5,7 +5,7 @@
     <script>
         var service = new SeeAlsoCollection();
         service.services = {
-            'pndaks' : new SeeAlsoService('http://beacon.findbuch.de/seealso/pnd-aks/-verbrannte')
+            'pndaks' : new SeeAlsoService('//beacon.findbuch.de/seealso/pnd-aks/-verbrannte')
         };
         service.views = {
             'seealso-ul' : new SeeAlsoUL({
@@ -74,7 +74,7 @@
     {% if gnd is defined %}
     <h2>Externe Angebote</h2>
     <p>Gemeinsame Normdatei: <a href="{{ entry.__get('gnd') }}" target="_blank">{{ gnd }}</a>.
-    {% if ddb_count > 0 %}
+    {% if ddb_count is defined and ddb_count > 0 %}
     <br />    <a href="https://www.deutsche-digitale-bibliothek.de/entity/{{ gnd }}" target="_blank">Personenseite in der Deutschen Digitalen Bibliothek ({{ ddb_count }} Objekt{% if ddb_count != 1 %}e{% endif %})</a>
     {% endif %}
     </p>

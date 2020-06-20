@@ -23,10 +23,10 @@ class LessExtension extends \Twig_Extension
 
     public function getFunctions()
     {
-        return array(
+        return [
             'less' => new \Twig_Function_Method($this, 'renderLess',
-                                                array('is_safe' => array('html'))),
-        );
+                                                [ 'is_safe' => [ 'html' ] ]),
+        ];
     }
 
     /**
@@ -37,7 +37,7 @@ class LessExtension extends \Twig_Extension
      *
      * @return string The link/script tags
      */
-    public function renderLess($less_filename, array $options = array())
+    public function renderLess($less_filename, array $options = [])
     {
         // $options = array_replace($this->app['less.view.options'], $options);
 

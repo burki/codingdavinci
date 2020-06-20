@@ -5,7 +5,7 @@ class WebApplication extends BaseApplication
 {
     protected $application;
 
-    public function __construct() 
+    public function __construct()
     {
         $this->container = $container = $this->setupContainer();
 
@@ -17,23 +17,23 @@ class WebApplication extends BaseApplication
 
         // validation
         $app->register(new \Silex\Provider\ValidatorServiceProvider());
-        $app->register(new \Silex\Provider\TranslationServiceProvider(), array(
+        $app->register(new \Silex\Provider\TranslationServiceProvider(), [
             'locale' => 'en_US',
             // 'translation.class_path' => __DIR__ . '/../vendor/symfony/src',
-            'translator.messages' => array()
-        ));
+            'translator.messages' => []
+        ]);
 
         // twig
-        $app->register(new \Silex\Provider\TwigServiceProvider(), array(
+        $app->register(new \Silex\Provider\TwigServiceProvider(), [
             'twig.path' => $container->getParameter('base_path') . '/resources/view',
-        ));
+        ]);
         $app->register(new \Silex\Provider\UrlGeneratorServiceProvider());
 
         // twig custom filter
         $filter = new Twig_SimpleFilter('dateincomplete',
                                         function ($datestr) {
                                             $date_parts = preg_split('/\-/', $datestr);
-                                            $date_parts_formatted = array();
+                                            $date_parts_formatted = [];
                                             for ($i = 0; $i < count($date_parts); $i++) {
                                                 if (0 == $date_parts[$i]) {
                                                     break;
@@ -76,20 +76,20 @@ class WebApplication extends BaseApplication
 
         // secure edit forms
         $users = $container->hasParameter('users')
-            ? $container->getParameter('users') : array();
+            ? $container->getParameter('users') : [];
 
         // must come after twig
-        $app['security.firewalls'] = array(
-            'admin' => array(
+        $app['security.firewalls'] = [
+            'admin' => [
                 'pattern' => '/edit',
                 'http' => true,
                 'users' => $users,
-            ),
-        );
+            ],
+        ];
 
-        $app->register(new Silex\Provider\SecurityServiceProvider(), array(
+        $app->register(new Silex\Provider\SecurityServiceProvider(), [
             'security.firewalls' => $app['security.firewalls']
-        ));
+        ]);
 
         // doctrine
         $app['doctrine'] = $container->get('doctrine');

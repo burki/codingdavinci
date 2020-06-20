@@ -9,14 +9,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ListController
 {
-
     public function indexAction(Request $request, BaseApplication $app)
     {
         $em = $app['doctrine'];
 
-        $searchwidget = new \Searchwidget\Searchwidget($request, $app['session'], array('routeName' => 'list'));
+        $searchwidget = new \Searchwidget\Searchwidget($request, $app['session'], [ 'routeName' => 'list' ]);
         // build where
-        $dql_where = array();
+        $dql_where = [];
 
         $search = $searchwidget->getCurrentSearch();
 
@@ -50,14 +49,12 @@ class ListController
         $pagerfanta->setCurrentPage($page);
 
         // display the list
-        return $app['twig']->render('list.index.twig',
-                                    array(
-                                          'pageTitle' => 'Liste',
-                                          'searchwidget' => $searchwidget,
-                                          'pager' => $pagerfanta,
-                                          'entries' => $pagerfanta->getCurrentPageResults(),
-                                          )
-                                    );
+        return $app['twig']->render('list.index.twig', [
+            'pageTitle' => 'Liste',
+            'searchwidget' => $searchwidget,
+            'pager' => $pagerfanta,
+            'entries' => $pagerfanta->getCurrentPageResults(),
+        ]);
     }
 
     public function detailAction(Request $request, BaseApplication $app)
@@ -87,19 +84,17 @@ class ListController
             $pageTitle_prepend = '';
         }
 
-        return $app['twig']->render('list.detail.twig',
-                                    array(
-                                          'pageTitle' => $pageTitle_prepend . 'Liste',
-                                          'entry' => $entity,
-                                          'persons' => $persons,
-                                          'publications' => $publications,
-                                          )
-                                    );
+        return $app['twig']->render('list.detail.twig', [
+            'pageTitle' => $pageTitle_prepend . 'Liste',
+            'entry' => $entity,
+            'persons' => $persons,
+            'publications' => $publications,
+        ]);
     }
 
     public function editAction(Request $request, BaseApplication $app)
     {
-        $edit_fields = array('title', 'authorLastname');
+        $edit_fields = [ 'title', 'authorLastname' ];
 
         $em = $app['doctrine'];
 
@@ -111,22 +106,22 @@ class ListController
             $app->abort(404, "Row $row does not exist.");
         }
 
-        $preset = array();
+        $preset = [];
         foreach ($edit_fields as $key) {
             $preset[$key] = $entity->$key;
         }
 
         $form = $app['form.factory']->createBuilder('form', $preset)
-            ->add('title', 'text',
-                  array('label' => 'Titel',
-                        'required' => false,
-                        ))
-            ->add('authorLastname', 'text',
-                  array('label' => 'Nachname',
-                        'required' => false,
-                        ))
-            ->getForm();
-
+            ->add('title', 'text', [
+                'label' => 'Titel',
+                'required' => false,
+            ])
+            ->add('authorLastname', 'text', [
+                'label' => 'Nachname',
+                'required' => false,
+            ])
+            ->getForm()
+            ;
 
         $form->handleRequest($request);
         if ($form->isValid()) {
@@ -142,16 +137,15 @@ class ListController
             if ($persist) {
                 $em->persist($entity);
                 $em->flush();
-                return $app->redirect($app['url_generator']->generate('list-detail', array('row' => $row)));
+
+                return $app->redirect($app['url_generator']->generate('list-detail', [ 'row' => $row ]));
             }
         }
 
         // var_dump($entity);
-        return $app['twig']->render('list.edit.twig',
-                                    array(
-                                          'entry' => $entity,
-                                          'form' => $form->createView(),
-                                          )
-                                    );
+        return $app['twig']->render('list.edit.twig', [
+            'entry' => $entity,
+            'form' => $form->createView(),
+        ]);
     }
 }

@@ -27,8 +27,8 @@ class GenderizeProvider implements GenderProviderInterface
         }
 
         $data = is_array($name)
-            ? array('names' => array('name' => $name))
-            : array('name' => $name);
+            ? [ 'names' => [ 'name' => $name ] ]
+            : [ 'name' => $name ];
 
         if (isset($country_id)) {
             $data['country_id'] = $country_id;
@@ -37,8 +37,7 @@ class GenderizeProvider implements GenderProviderInterface
             $data['language_id'] = $language_id;
         }
 
-        $request = $this->http_client->createRequest('GET',
-                                                     array(self::URL_TEMPLATE, $data));
+        $request = $this->http_client->createRequest('GET', [ self::URL_TEMPLATE, $data ]);
 
         // var_dump($request->getUrl());
         $response = $this->http_client->send($request);

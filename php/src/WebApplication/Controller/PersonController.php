@@ -9,7 +9,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class PersonController
 {
-
     public function indexAction(Request $request, BaseApplication $app)
     {
         $em = $app['doctrine'];
@@ -17,39 +16,41 @@ class PersonController
         // we set filter/order into route-params
         $route_params = $request->attributes->get('_route_params');
 
-        $searchwidget = new \Searchwidget\Searchwidget($request, $app['session'], array('routeName' => 'person'));
+        $searchwidget = new \Searchwidget\Searchwidget($request, $app['session'], [ 'routeName' => 'person' ]);
 
         // build where
-        $dql_where = array();
+        $dql_where = [];
 
         $search = $searchwidget->getCurrentSearch();
 
         if (!empty($search)) {
-          $fulltext_condition = \MysqlFulltextSimpleParser::parseFulltextBoolean($search, TRUE);
-          $dql_where[] = "MATCH (P.surname, P.forename) AGAINST ('" . $fulltext_condition . "' BOOLEAN) = TRUE";
+            $fulltext_condition = \MysqlFulltextSimpleParser::parseFulltextBoolean($search, TRUE);
+            $dql_where[] = "MATCH (P.surname, P.forename) AGAINST ('" . $fulltext_condition . "' BOOLEAN) = TRUE";
         }
 
-        $searchwidget->addFilter('person', array('all' => 'Alle Personen',
-                                                 'completeWorks' => 'Gesamtwerk verboten',
-                                                 'today' => 'Heute Geburts- oder Todestag',
-                                                 ));
+        $searchwidget->addFilter('person', [
+            'all' => 'Alle Personen',
+            'completeWorks' => 'Gesamtwerk verboten',
+            'today' => 'Heute Geburts- oder Todestag',
+        ]);
         $filters = $searchwidget->getActiveFilters();
 
         // build order
-        $searchwidget->addSortBy('name', array('label' => 'Name'));
-        $searchwidget->addSortBy('dateOfBirth', array('label' => 'Geburtsdatum'));
+        $searchwidget->addSortBy('name', [ 'label' => 'Name' ]);
+        $searchwidget->addSortBy('dateOfBirth', [ 'label' => 'Geburtsdatum' ]);
 
         $sort_by = $searchwidget->getCurrentSortBy();
-        $orders = array('nameSort' => 'ASC', 'P.forename' => 'ASC');
+        $orders = [ 'nameSort' => 'ASC', 'P.forename' => 'ASC' ];
         if (false !== $sort_by) {
-            $orders = array($sort_by[0] . 'Sort' => $sort_by[1]) + $orders;
+            $orders = [ $sort_by[0] . 'Sort' => $sort_by[1] ] + $orders;
         }
         // var_dump($orders);
 
         // Select your items.
-        $dql = "SELECT P, IFNULL(P.dateOfBirth, '9999-99-99') HIDDEN dateOfBirthSort, IFNULL(P.surname, 'ZZ') HIDDEN nameSort FROM Entities\Person P";
-        if (array_key_exists('person', $filters)) {
+        $dql = "SELECT P, IFNULL(P.dateOfBirth, '9999-99-99') HIDDEN dateOfBirthSort, IFNULL(P.surname, 'ZZ') HIDDEN nameSort"
+             . " FROM Entities\Person P";
 
+        if (array_key_exists('person', $filters)) {
             if ('today' == $filters['person'] || preg_match('/^\d+\-\d+$/', $filters['person'])) {
                 if ('today' == $filters['person']) {
                     $month_day = "DATE_FORMAT(CURRENT_DATE(),'%m-%d')";
@@ -63,7 +64,6 @@ class PersonController
             else if ('completeWorks' == $filters['person']) {
                 $dql_where[] = "P.completeWorks <> 0";
             }
-
         }
 
         if (!empty($dql_where)) {
@@ -101,14 +101,12 @@ class PersonController
         $request->attributes->set('_route_params', $route_params);
 
         // display the list
-        return $app['twig']->render('person.index.twig',
-                                    array(
-                                          'pageTitle' => 'Personen',
-                                          'searchwidget' => $searchwidget,
-                                          'pager' => $pagerfanta,
-                                          'entries' => $pagerfanta->getCurrentPageResults(),
-                                          )
-                                    );
+        return $app['twig']->render('person.index.twig', [
+            'pageTitle' => 'Personen',
+            'searchwidget' => $searchwidget,
+            'pager' => $pagerfanta,
+            'entries' => $pagerfanta->getCurrentPageResults(),
+        ]);
     }
 
     public function detailAction(Request $request, BaseApplication $app)
@@ -121,7 +119,7 @@ class PersonController
             $gnd = $request->get('gnd');
             if (!empty($gnd)) {
                 $qb = $em->createQueryBuilder();
-                $qb->select(array('P.id'))
+                $qb->select([ 'P.id' ])
                     ->from('Entities\Person', 'P')
                     ->where($qb->expr()->like('P.gnd', ':gnd'))
                     ->setParameter('gnd', '%' . $gnd)
@@ -158,17 +156,18 @@ class PersonController
             ? $em->getRepository('Entities\Place')->findOneByGnd($gndPlaceOfDeath)
             : null;
 
-        $render_params = array('pageTitle' => $entity->getFullname(true) . ' - Person',
-                               'entry' => $entity,
-                               'placeOfBirth' => $placeOfBirth,
-                               'placeOfDeath' => $placeOfDeath,
-                               'list' => $list,
-                               'ddb_count' => 0
-                               );
+        $render_params = [
+            'pageTitle' => $entity->getFullname(true) . ' - Person',
+            'entry' => $entity,
+            'placeOfBirth' => $placeOfBirth,
+            'placeOfDeath' => $placeOfDeath,
+            'list' => $list,
+            'ddb_count' => 0
+        ];
 
         if (preg_match('/d\-nb\.info\/gnd\/([0-9xX]+)/', $entity->gnd, $matches)) {
             $render_params['gnd'] = $matches[1];
-            
+
             $gndService = $app['gnd-service'];
             $result = $gndService->lookup($render_params['gnd']);
             if (false !== $result && array_key_exists('count', $result)) {
@@ -184,12 +183,12 @@ class PersonController
 
         $ret = '#FORMAT: BEACON' . "\n" . '#PREFIX: http://d-nb.info/gnd/' . "\n";
         $ret .= sprintf('#TARGET: %s/gnd/{ID}',
-                        $app['url_generator']->generate('person', array(), true))
+                        $app['url_generator']->generate('person', [], true))
               . "\n";
         $ret .= '#NAME: Verbrannte und Verbannte' . "\n";
         $ret .= '#MESSAGE: Eintrag in der Liste der im Nationalsozialismus verbotenen Publikationen und Autoren' . "\n";
 
-        $dql = "SELECT DISTINCT P.id, P.gnd FROM Entities\Person P WHERE P.status >= 0 AND P.gnd IS NOT NULL ORDER BY P.gnd";
+        $dql = "SELECT P.id, P.gnd FROM Entities\Person P WHERE P.status >= 0 AND P.gnd IS NOT NULL ORDER BY P.gnd";
         $query = $em->createQuery($dql);
         // $query->setMaxResults(10);
         foreach ($query->getResult() as $result) {
@@ -199,15 +198,13 @@ class PersonController
             }
         }
 
-        return new Response($ret,
-                            200,
-                            array('Content-Type' => 'text/plain; charset=UTF-8')
-                            );
+        return new Response($ret, 200,
+                            [ 'Content-Type' => 'text/plain; charset=UTF-8' ]);
     }
 
     public function editAction(Request $request, BaseApplication $app)
     {
-        $edit_fields = array('gnd', 'forename', 'surname');
+        $edit_fields = [ 'gnd', 'forename', 'surname' ];
 
         $em = $app['doctrine'];
 
@@ -219,26 +216,26 @@ class PersonController
             $app->abort(404, "Person $id does not exist.");
         }
 
-        $preset = array();
+        $preset = [];
         foreach ($edit_fields as $key) {
             $preset[$key] = $entity->$key;
         }
 
         $form = $app['form.factory']->createBuilder('form', $preset)
-            ->add('surname', 'text',
-                  array('label' => 'Nachname',
-                        'required' => true,
-                        ))
-            ->add('forename', 'text',
-                  array('label' => 'Vorname',
-                        'required' => false,
-                        ))
-            ->add('gnd', 'text',
-                  array('label' => 'GND',
-                        'required' => false,
-                        ))
-            ->getForm();
-
+            ->add('surname', 'text', [
+                'label' => 'Nachname',
+                'required' => true,
+            ])
+            ->add('forename', 'text', [
+                'label' => 'Vorname',
+                'required' => false,
+            ])
+            ->add('gnd', 'text', [
+                'label' => 'GND',
+                'required' => false,
+            ])
+            ->getForm()
+            ;
 
         $form->handleRequest($request);
         if ($form->isValid()) {
@@ -251,20 +248,19 @@ class PersonController
                     $entity->$key = $data[$key];
                 }
             }
+
             if ($persist) {
                 $em->persist($entity);
                 $em->flush();
-                return $app->redirect($app['url_generator']->generate('person-detail', array('id' => $id)));
+
+                return $app->redirect($app['url_generator']->generate('person-detail', [ 'id' => $id ]));
             }
         }
 
         // var_dump($entity);
-        return $app['twig']->render('person.edit.twig',
-                                    array(
-                                          'entry' => $entity,
-                                          'form' => $form->createView(),
-                                          )
-                                    );
+        return $app['twig']->render('person.edit.twig', [
+            'entry' => $entity,
+            'form' => $form->createView(),
+        ]);
     }
-
 }

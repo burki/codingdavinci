@@ -13,11 +13,9 @@ class StaticController
     public function homeAction(Request $request, BaseApplication $app)
     {
         // display the static content
-        return $app['twig']->render('static.twig',
-                                    array(
-                                          'content' => '<div style="position: absolute; bottom: 2px; right: 15px; font-size: smaller; color: gray;"> Bildquelle: <a style="color: #ddd" href="http://commons.wikimedia.org/wiki/File:Berlin_DenkmalBuecherverbrennung_BookBurningMemorial_Bebelplatz.jpg" target="_blank">Wikimedia Commons, Daniel Neugebauer</a>, CC-BY-SA-2.5</div>',
-                                          )
-                                    );
+        return $app['twig']->render('static.twig', [
+            'content' => '<div style="position: absolute; bottom: 2px; right: 15px; font-size: smaller; color: gray;"> Bildquelle: <a style="color: #ddd" href="http://commons.wikimedia.org/wiki/File:Berlin_DenkmalBuecherverbrennung_BookBurningMemorial_Bebelplatz.jpg" target="_blank">Wikimedia Commons, Daniel Neugebauer</a>, CC-BY-SA-2.5</div>',
+        ]);
     }
 
     public function geschichtenAction(Request $request, BaseApplication $app)
@@ -25,23 +23,21 @@ class StaticController
         $content = <<<EOT
 <!-- Beginn der storymap -->
     <h2 id="kolb" class="anchor-offset">Annette Kolb</h2>
-    <iframe src='http://cdn.knightlab.com/libs/storymapjs/latest/embed/?url=https://www.googledrive.com/host/0B98wXqM9dji8UzQ1cjlZcFI4bUE/published.json&lang=de&height=600' width='100%' height='600' frameborder='0' style="margin-bottom: 100px"></iframe>
+    <iframe src='//cdn.knightlab.com/libs/storymapjs/latest/embed/?url=https://www.googledrive.com/host/0B98wXqM9dji8UzQ1cjlZcFI4bUE/published.json&lang=de&height=600' width='100%' height='600' frameborder='0' style="margin-bottom: 100px"></iframe>
 
 <!-- Ende der Storymap -->
 
 <!-- Beginn der Timeline: Erich Kästner -->
     <h2 id="kaestner" class="anchor-offset">Erich Kästner</h2>
-    <iframe src='http://cdn.knightlab.com/libs/timeline/latest/embed/index.html?source=0AiSeZXd_qNJ4dHUxRFFsZy1lemFYelpFLTBQQWFUNnc&font=PT&maptype=toner&lang=de&height=650' width='100%' height='650' frameborder='0'></iframe>
+    <iframe src='//cdn.knightlab.com/libs/timeline/latest/embed/index.html?source=0AiSeZXd_qNJ4dHUxRFFsZy1lemFYelpFLTBQQWFUNnc&font=PT&maptype=toner&lang=de&height=650' width='100%' height='650' frameborder='0'></iframe>
 
 
 <!-- Ende der Timeline: Erich Kästner -->
 EOT;
         // display the static content
-        return $app['twig']->render('static.twig',
-                                    array(
-                                          'content' => $content,
-                                          )
-                                    );
+        return $app['twig']->render('static.twig', [
+            'content' => $content,
+        ]);
     }
 
     public function tableauPublikationsOrteAction(Request $request, BaseApplication $app)
@@ -52,11 +48,9 @@ EOT;
 <p class="intro">Jeder Publikationsort wird als ein farbiger Punkt auf einer Weltkarte dargestellt. Die Punktmenge kann nach geografischen Kriterien (Land, Ort) und nach Veröffentlichungsjahr und Autor gefiltert werden. Unterschiedliche Farben stellen unterschiedliche Länder dar. Die Größen entsprechen der Anzahl der in dem Ort veröffentlichten Publikationen.</p>
 EOT;
         // display the static content
-        return $app['twig']->render('static.twig',
-                                    array(
-                                          'content' => $content,
-                                          )
-                                    );
+        return $app['twig']->render('static.twig', [
+            'content' => $content,
+        ]);
     }
 
     public function tableauDotAction(Request $request, BaseApplication $app)
@@ -67,11 +61,9 @@ EOT;
         <p class="intro">Jede Publikation wird als ein farbiger Punkt dargestellt. Die Punktmenge kann nach geografischen Kriterien (Land, Ort) und nach Veröffentlichungsjahr und Autor gefiltert werden. Unterschiedliche Farben stellen grundsätzlich unterschiedliche Titel dar. In Ermangelung einer hinreichenden Farbpalette kommt es zu Farbgleichheiten.</p>
 EOT;
         // display the static content
-        return $app['twig']->render('static.twig',
-                                    array(
+        return $app['twig']->render('static.twig', [
                                           'content' => $content,
-                                          )
-                                    );
+        ]);
     }
 
     public function tableauBubbleAction(Request $request, BaseApplication $app)
@@ -82,11 +74,9 @@ EOT;
         <p class="intro">Jede/r Autor/in wird durch einen Kreis dargestellt, dessen Größe der Zahl der verbotenen Werke entspricht. Die betroffenen Autor/innen und Werke können nach geografischen Kriterien (Land, Ort) und nach Veröffentlichungsjahr und Autor gefiltert werden. Unterschiedliche Farben stellen grundsätzlich unterschiedliche Autoren dar. In Ermangelung einer hinreichenden Farbpalette kommt es zu Farbgleichheiten.</p>
 EOT;
         // display the static content
-        return $app['twig']->render('static.twig',
-                                    array(
-                                          'content' => $content,
-                                          )
-                                    );
+        return $app['twig']->render('static.twig', [
+            'content' => $content,
+        ]);
     }
 
     public function aboutAction(Request $request, BaseApplication $app)
@@ -97,18 +87,13 @@ EOT;
         $parsedown = new \Parsedown();
         $content = $parsedown->parse($markdown);
 
-        return $app['twig']->render('static.twig',
-                                    array(
-                                          'content' => $content,
-                                          )
-                                    );
+        return $app['twig']->render('static.twig', [
+            'content' => $content,
+        ]);
         */
         // display the static content
-        return $app['twig']->render('about.twig',
-                                    array(
-                                          'content' => '',
-                                          )
-                                    );
+        return $app['twig']->render('about.twig', [
+            'content' => '',
+        ]);
     }
-
 }

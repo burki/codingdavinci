@@ -11,31 +11,31 @@ class PeclGenderProvider implements GenderProviderInterface
         $result = null;
         switch ($gender_result) {
             case \Gender\Gender::IS_FEMALE:
-                $result = array('name' => $name, 'gender' => 'female', 'probability' => 1.0);
+                $result = [ 'name' => $name, 'gender' => 'female', 'probability' => 1.0 ];
                 break;
 
             case \Gender\Gender::IS_MOSTLY_FEMALE:
-                $result = array('name' => $name, 'gender' => 'female', 'probability' => 0.75);
+                $result = [ 'name' => $name, 'gender' => 'female', 'probability' => 0.75 ];
                 break;
 
             case \Gender\Gender::IS_MALE:
-                $result = array('name' => $name, 'gender' => 'male', 'probability' => 1.0);
+                $result = [ 'name' => $name, 'gender' => 'male', 'probability' => 1.0 ];
                 break;
 
             case \Gender\Gender::IS_MOSTLY_MALE:
-                $result = array('name' => $name, 'gender' => 'male', 'probability' => 0.75);
+                $result = [ 'name' => $name, 'gender' => 'male', 'probability' => 0.75 ];
                 break;
 
             case \Gender\Gender::IS_UNISEX_NAME:
-                $result = array('name' => $name, 'gender' => 'unisex', 'probability' => 0.5);
+                $result = [ 'name' => $name, 'gender' => 'unisex', 'probability' => 0.5 ];
                 break;
 
             case \Gender\Gender::IS_A_COUPLE:
-                $result = array('name' => $name, 'gender' => 'both', 'probability' => 0.5);
+                $result =[ 'name' => $name, 'gender' => 'both', 'probability' => 0.5 ];
                 break;
 
             case \Gender\Gender::NAME_NOT_FOUND:
-                $result = array('name' => $name, 'gender' => null);
+                $result = [ 'name' => $name, 'gender' => null ];
                 break;
         }
 
@@ -58,19 +58,21 @@ class PeclGenderProvider implements GenderProviderInterface
                 case 'FR':
                     $country = \Gender\Gender::FRANCE;
                     break;
+
                 default:
                     throw new \Exception('TODO: map iso-country-code ' . $country_id . ' to Gender-constants');
             }
         }
 
         if (is_array($name)) {
-            $results = array();
+            $results = [];
             foreach ($name as $single_name) {
                 $result = $this->getSingle($single_name);
                 if (isset($result)) {
                     $results[] = $result;
                 }
             }
+
             return $results;
         }
 
@@ -84,5 +86,4 @@ class PeclGenderProvider implements GenderProviderInterface
     {
         return 'pecl-gender';
     }
-
 }

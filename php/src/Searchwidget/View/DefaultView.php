@@ -41,7 +41,7 @@ class DefaultView /* implements ViewInterface */
     /**
      * {@inheritdoc}
      */
-    public function render(\Searchwidget\Searchwidget $searchwidget, $routeGenerator, array $options = array())
+    public function render(\Searchwidget\Searchwidget $searchwidget, $routeGenerator, array $options = [])
     {
         $this->initializeSearchwidget($searchwidget);
         $this->initializeOptions($options);
@@ -95,14 +95,14 @@ class DefaultView /* implements ViewInterface */
 
     private function generateSearch($name = 'search')
     {
-        return $this->template->search($name, array('value' => $this->searchwidget->getCurrentSearch($name)));
+        return $this->template->search($name, [ 'value' => $this->searchwidget->getCurrentSearch($name) ]);
     }
 
     private function generateSortBy()
     {
 
         $current_sort = $this->searchwidget->getCurrentSortBy();
-        $sort_by_elements = array();
+        $sort_by_elements = [];
         foreach ($this->searchwidget->getSortBy() as $name => $options) {
             $sort_by_elements[] = $this->template->sortBy($name, $options, $current_sort, $this->searchwidget->getRequest());
         }
@@ -115,7 +115,7 @@ class DefaultView /* implements ViewInterface */
     private function generateFilters()
     {
         $active = $this->searchwidget->getActiveFilters();
-        $filter_elements = array();
+        $filter_elements = [];
         foreach ($this->searchwidget->getFilters() as $name => $options) {
             $filter_elements[] = $this->template->filter($name, $options,
                                                          array_key_exists($name, $active) ? $active[$name] : null,

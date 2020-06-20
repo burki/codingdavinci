@@ -16,9 +16,10 @@ class SearchwidgetExtension extends \Twig_Extension
 
     public function getFunctions()
     {
-        return array(
-            'searchwidget' => new \Twig_Function_Method($this, 'renderSearchwidget', array('is_safe' => array('html'))),
-        );
+        return [
+            'searchwidget' => new \Twig_Function_Method($this, 'renderSearchwidget',
+                                                        [ 'is_safe' => [ 'html' ] ]),
+        ];
     }
 
     /**
@@ -30,7 +31,7 @@ class SearchwidgetExtension extends \Twig_Extension
      *
      * @return string The searchwidget rendered.
      */
-    public function renderSearchwidget(\Searchwidget\Searchwidget $searchwidget, $viewName = null, array $options = array())
+    public function renderSearchwidget(\Searchwidget\Searchwidget $searchwidget, $viewName = null, array $options = [])
     {
         $options = array_replace($this->app['searchwidget.view.options'], $options);
 

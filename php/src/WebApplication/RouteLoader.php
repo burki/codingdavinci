@@ -36,6 +36,10 @@ class RouteLoader
             return new Controller\PublicationController();
         });
 
+        $this->app['publisher.controller'] = $this->app->share(function () {
+            return new Controller\PublisherController();
+        });
+
         $this->app['place.controller'] = $this->app->share(function () {
             return new Controller\PlaceController();
         });
@@ -43,112 +47,109 @@ class RouteLoader
 
     public function bindRoutesToControllers()
     {
-        $this->app->get('/', array($this->app['static.controller'], 'homeAction'))
+        $this->app->get('/', [ $this->app['static.controller'], 'homeAction' ])
             ->bind('home');
 
-        $this->app->get('/geschichten', array($this->app['static.controller'], 'geschichtenAction'))
+        $this->app->get('/geschichten', [ $this->app['static.controller'], 'geschichtenAction' ])
             ->bind('geschichten');
 
-        $this->app->get('/analyse', array($this->app['statistics.controller'], 'introAction'))
+        $this->app->get('/analyse', [ $this->app['statistics.controller'], 'introAction' ])
             ->bind('analyse');
 
-        $this->app->get('/analyse-jahr', array($this->app['statistics.controller'],
-                                               'yearAction'))
+        $this->app->get('/analyse-jahr', [ $this->app['statistics.controller'], 'yearAction' ])
             ->bind('analyse-jahr');
 
-        $this->app->get('/analyse-worte', array($this->app['statistics.controller'],
-                                               'wordCountAction'))
+        $this->app->get('/analyse-worte', [ $this->app['statistics.controller'], 'wordCountAction' ])
             ->bind('analyse-worte');
 
-        $this->app->get('/analyse-orte', array($this->app['statistics.controller'],
-                                               'placeCountAction'))
+        $this->app->get('/analyse-orte', [ $this->app['statistics.controller'], 'placeCountAction' ])
             ->bind('analyse-orte');
-        $this->app->get('/analyse-karte-publikationsorte',
-                        array($this->app['static.controller'],
-                              'tableauPublikationsOrteAction'))
+
+        $this->app->get('/analyse-karte-publikationsorte', [ $this->app['static.controller'], 'tableauPublikationsOrteAction' ])
             ->bind('analyse-karte-publikationsorte');
-        $this->app->get('/analyse-visualisierung-dot',
-                        array($this->app['static.controller'],
-                              'tableauDotAction'))
+
+        $this->app->get('/analyse-visualisierung-dot', [ $this->app['static.controller'], 'tableauDotAction' ])
             ->bind('analyse-visualisierung-dot');
-        $this->app->get('/analyse-visualisierung-bubble',
-                        array($this->app['static.controller'],
-                              'tableauBubbleAction'))
+        $this->app->get('/analyse-visualisierung-bubble', [ $this->app['static.controller'], 'tableauBubbleAction' ])
             ->bind('analyse-visualisierung-bubble');
-        $this->app->get('/analyse-karte-publikationslaender',
-                        array($this->app['statistics.controller'],
-                              'leafletOrtAction'))
+
+        $this->app->get('/analyse-karte-publikationslaender', [ $this->app['statistics.controller'], 'leafletOrtAction' ])
             ->bind('analyse-karte-publikationslaender');
-        $this->app->get('/analyse-orte-geburttod',
-                        array($this->app['statistics.controller'],
-                              'd3jsOrtAction'))
+
+        $this->app->get('/analyse-orte-geburttod', [ $this->app['statistics.controller'], 'd3jsOrtAction' ])
             ->bind('analyse-orte-geburttod');
-        $this->app->get('/analyse-personen-wikipedia',
-                        array($this->app['statistics.controller'],
-                              'personenWikipediaAction'))
+
+        $this->app->get('/analyse-personen-wikipedia', [ $this->app['statistics.controller'], 'personenWikipediaAction' ])
             ->bind('analyse-personen-wikipedia');
 
         // list
-        $this->app->get('/list', array($this->app['list.controller'], 'indexAction'))
+        $this->app->get('/list', [ $this->app['list.controller'], 'indexAction' ])
             ->bind('list');
-        $this->app->post('/list', array($this->app['list.controller'], 'indexAction'));
+        $this->app->post('/list', [ $this->app['list.controller'], 'indexAction' ]);
 
-        $this->app->get('/list/{row}', array($this->app['list.controller'], 'detailAction'))
+        $this->app->get('/list/{row}', [ $this->app['list.controller'], 'detailAction' ])
             ->assert('row', '\d+')
             ->bind('list-detail');
 
         $this->app->get('/list/{row}/edit',
-                        array($this->app['list.controller'], 'editAction'))
+                        [ $this->app['list.controller'], 'editAction' ])
             ->bind('list-edit');
         $this->app->post('/list/{row}/edit',
-                         array($this->app['list.controller'], 'editAction'));
+                         [ $this->app['list.controller'], 'editAction' ]);
 
         // person
-        $this->app->get('/person', array($this->app['person.controller'], 'indexAction'))
+        $this->app->get('/person', [ $this->app['person.controller'], 'indexAction' ])
             ->bind('person');
-        $this->app->post('/person', array($this->app['person.controller'], 'indexAction'));
-        $this->app->get('/person/beacon', array($this->app['person.controller'], 'gndBeaconAction'));
+        $this->app->post('/person', [ $this->app['person.controller'], 'indexAction' ]);
+        $this->app->get('/person/beacon', [ $this->app['person.controller'], 'gndBeaconAction' ]);
 
         $this->app->get('/person/{id}',
-                        array($this->app['person.controller'], 'detailAction'))
+                        [ $this->app['person.controller'], 'detailAction' ])
             ->bind('person-detail');
         $this->app->get('/person/gnd/{gnd}',
-                        array($this->app['person.controller'], 'detailAction'))
+                        [ $this->app['person.controller'], 'detailAction' ])
             ->bind('person-detail-gnd');
 
         $this->app->get('/person/{id}/edit',
-                        array($this->app['person.controller'], 'editAction'))
+                        [ $this->app['person.controller'], 'editAction' ])
             ->bind('person-edit');
         $this->app->post('/person/{id}/edit',
-                         array($this->app['person.controller'], 'editAction'));
+                         [ $this->app['person.controller'], 'editAction' ]);
 
         // publication
-        $this->app->get('/publication', array($this->app['publication.controller'], 'indexAction'))
+        $this->app->get('/publication', [ $this->app['publication.controller'], 'indexAction' ])
             ->bind('publication');
-        $this->app->post('/publication', array($this->app['publication.controller'], 'indexAction'));
+        $this->app->post('/publication', [ $this->app['publication.controller'], 'indexAction' ]);
         $this->app->get('/publication/{id}',
-                        array($this->app['publication.controller'], 'detailAction'))
+                        [ $this->app['publication.controller'], 'detailAction' ])
             ->bind('publication-detail');
 
+        // publisher
+        $this->app->get('/publisher', [ $this->app['publisher.controller'], 'indexAction' ])
+            ->bind('publisher');
+        $this->app->post('/publisher', [ $this->app['publisher.controller'], 'indexAction' ]);
+        $this->app->get('/publisher/{id}',
+                        [ $this->app['publisher.controller'], 'detailAction' ])
+            ->bind('publisher-detail');
 
         // place
-        $this->app->get('/place', array($this->app['place.controller'], 'indexAction'))
+        $this->app->get('/place', [ $this->app['place.controller'], 'indexAction' ])
             ->bind('place');
-        $this->app->post('/place', array($this->app['place.controller'], 'indexAction'));
-        // $this->app->get('/person/beacon', array($this->app['person.controller'], 'gndBeaconAction'));
+        $this->app->post('/place', [ $this->app['place.controller'], 'indexAction' ]);
+        // $this->app->get('/person/beacon', [ $this->app['person.controller'], 'gndBeaconAction' ]);
 
-        $this->app->get('/place/{id}', array($this->app['place.controller'], 'detailAction'))
+        $this->app->get('/place/{id}', [ $this->app['place.controller'], 'detailAction' ])
             ->assert('id', '\d+')
             ->bind('place-detail');
 
         $this->app->get('/place/{id}/edit',
-                        array($this->app['place.controller'], 'editAction'))
+                        [ $this->app['place.controller'], 'editAction' ])
             ->bind('list-edit');
         $this->app->post('/place/{id}/edit',
-                         array($this->app['place.controller'], 'editAction'));
+                         [ $this->app['place.controller'], 'editAction' ]);
 
         // about
-        $this->app->get('/about', array($this->app['static.controller'], 'aboutAction'))
+        $this->app->get('/about', [ $this->app['static.controller'], 'aboutAction' ])
             ->bind('about');
     }
 }

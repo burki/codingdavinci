@@ -16,7 +16,7 @@ namespace Searchwidget\View\Template;
  */
 abstract class Template /* implements TemplateInterface */
 {
-    static protected $defaultOptions = array();
+    static protected $defaultOptions = [];
 
     private $routeGenerator;
     private $options;
@@ -41,7 +41,7 @@ abstract class Template /* implements TemplateInterface */
         $this->options = static::$defaultOptions;
     }
 
-    protected function generateRoute($options = array())
+    protected function generateRoute($options = [])
     {
         return call_user_func($this->getRouteGenerator(), $options);
     }

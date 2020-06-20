@@ -6,10 +6,12 @@ require_once __DIR__ . '/../Helper/fullnameparser.php';
 
 class NameService
 {
-    protected static $GENDER_MAP = array('female' => 'female',
-                                         'male' => 'male');
+    protected static $GENDER_MAP = [
+        'female' => 'female',
+        'male' => 'male',
+    ];
 
-    protected static $NAME_CACHE = array();
+    protected static $NAME_CACHE = [];
 
     /**
      * @var \Helper\Service\Gender\GenderProvider $gender_provider
@@ -43,21 +45,20 @@ class NameService
         }
         $parts = $this->fullNameParser->split_full_name($fullname);
 
-        $given_parts = array($parts['fname']);
+        $given_parts = [ $parts['fname'] ];
         if (!empty($parts['initials'])) {
             $given_parts[] = $parts['initials'];
         }
 
-        $family_parts = array($parts['lname']);
+        $family_parts = [ $parts['lname'] ];
         if (false !== $parts['suffix'] && !empty($parts['suffix'])) {
             $family_parts[] = $parts['suffix'];
         }
 
-        return array(
-                     'given' => implode(' ', $given_parts),
-                     'family' => implode(' ', $family_parts),
-                     );
-
+        return [
+            'given' => implode(' ', $given_parts),
+            'family' => implode(' ', $family_parts),
+        ];
     }
 
     public function genderize($given, $family = null) {
@@ -133,7 +134,7 @@ class NameService
                     if ($i > 0 && $name = 'Maria') {
                         ; // Eva Maria oder Jose Maria -> ignore Maria
                     }
-                    else if ($i == count($results) - 1 && in_array($name, array('Le', 'Des', 'El'))) {
+                    else if ($i == count($results) - 1 && in_array($name, [ 'Le', 'Des', 'El' ])) {
                         ;  // Le / Des / El should be part of lastname
                     }
                     else {

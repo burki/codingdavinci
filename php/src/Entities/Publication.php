@@ -118,6 +118,14 @@ class Publication extends Base
     private $personRefs;
 
     /**
+     * @var Publisher|null
+     *
+     * @ORM\ManyToOne(targetEntity="Publisher", fetch="EAGER")
+     * @ORM\JoinColumn(name="publisher_id", referencedColumnName="id", nullable=true)
+     */
+    protected $publishedBy;
+
+    /**
      * @Gedmo\Timestampable(on="create")
      * @ORM\Column(name="created_at", type="datetime")
      */
@@ -130,11 +138,13 @@ class Publication extends Base
      */
     protected $changedAt;
 
-    public function addPersonRef($personRef) {
+    public function addPersonRef($personRef)
+    {
         $this->personRefs[] = $personRef;
     }
 
-    public function getShortTitle() {
+    public function getShortTitle()
+    {
         $title = $this->title;
         if (!empty($this->publicationStatement)) {
             $title .= '. ' . $this->publicationStatement;

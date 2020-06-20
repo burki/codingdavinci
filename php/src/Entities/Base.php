@@ -4,7 +4,7 @@ namespace Entities;
 abstract class Base
 {
 
-    public function __construct($properties = array())
+    public function __construct($properties = [])
     {
         if (isset($properties) && is_array($properties)) {
             foreach ($properties as $key => $val) {
@@ -60,7 +60,7 @@ abstract class Base
         $entityPersister = $uow->getEntityPersister($className);
         $classMetadata = $entityPersister->getClassMetadata();
 
-        $result = array();
+        $result = [];
         foreach ($uow->getOriginalEntityData($this) as $field => $value) {
             if (isset($classMetadata->associationMappings[$field])) {
                 $assoc = $classMetadata->associationMappings[$field];

@@ -2,23 +2,24 @@
 
 namespace Service\Gender;
 
-class NameListGenderProvider implements GenderProviderInterface
+class NameListGenderProvider
+implements GenderProviderInterface
 {
-    static $NAME_LIST = array();
+    static $NAME_LIST = [];
 
     private static function readList($fname) {
         $trimmed = file(realpath($fname), FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         if (false === $trimmed) {
             return $false;
         }
-        self::$NAME_LIST[$fname] = array();
+        self::$NAME_LIST[$fname] = [];
         foreach ($trimmed as $line) {
             $parts = preg_split('/\s*\t\s*/', $line);
             if (count($parts) >= 2) {
                 $name = $parts[0];
                 $key = mb_strtolower($name, 'utf-8');
 
-                $result = array('name' => $name, 'gender' => $parts[1]);
+                $result = [ 'name' => $name, 'gender' => $parts[1] ];
                 if (count($parts) > 2 && $parts[2] !== '') {
                     $result['probability'] = $parts[2];
                 }
@@ -28,6 +29,7 @@ class NameListGenderProvider implements GenderProviderInterface
                 self::$NAME_LIST[$fname][$key] = $result;
             }
         }
+
         return true;
     }
 
@@ -53,7 +55,7 @@ class NameListGenderProvider implements GenderProviderInterface
         $key = mb_strtolower($name, 'utf-8');
         $result = array_key_exists($key, self::$NAME_LIST[$this->fname])
             ? self::$NAME_LIST[$this->fname][$key]
-            : array('gender' => null);
+            : [ 'gender' => null ];
 
         $result['name'] = $name;
 
@@ -66,13 +68,14 @@ class NameListGenderProvider implements GenderProviderInterface
         }
 
         if (is_array($name)) {
-            $results = array();
+            $results = [];
             foreach ($name as $single_name) {
                 $result = $this->getSingle($single_name);
                 if (isset($result)) {
                     $results[] = $result;
                 }
             }
+
             return $results;
         }
 
@@ -86,5 +89,4 @@ class NameListGenderProvider implements GenderProviderInterface
     {
         return 'namelist-gender';
     }
-
 }

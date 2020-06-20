@@ -27,7 +27,7 @@ class ViewFactory /* implements ViewFactoryInterface */
      */
     public function __construct()
     {
-        $this->views = array();
+        $this->views = [];
     }
 
     /**
@@ -93,6 +93,6 @@ class ViewFactory /* implements ViewFactoryInterface */
      */
     public function clear()
     {
-        $this->views = array();
+        $this->views = [];
     }
 }

@@ -16,7 +16,6 @@
 
 class FullNameParser
 {
-
     public function split_full_name($full_name)
     {
         $full_name = trim($full_name);
@@ -119,11 +118,13 @@ class FullNameParser
         // ignore periods
         $word = str_replace('.','',$word);
         // these are some common suffixes - what am I missing?
-        $suffix_array = array('I','II','III','IV','V','Senior','Junior','Jr','Sr','PhD','APR','RPh','PE','MD','MA','DMD','CME');
+        $suffix_array = [ 'I','II','III','IV','V','Senior','Junior','Jr','Sr','PhD','APR','RPh','PE','MD','MA','DMD','CME' ];
         foreach ($suffix_array as $suffix) {
-            if (strtolower($suffix) == strtolower($word))
+            if (strtolower($suffix) == strtolower($word)) {
                 return $suffix;
+            }
         }
+
         return false;
     }
 
@@ -132,7 +133,8 @@ class FullNameParser
     {
         $word = strtolower($word);
         // these are some common prefixes that identify a compound last names - what am I missing?
-        $words = array('vere','von','van','de','del','della','di','da','pietro','vanden','du','st.','st','la','ter');
+        $words = [ 'vere','von','van','de','del','della','di','da','pietro','vanden','du','st.','st','la','ter' ];
+
         return array_search($word,$words);
     }
 

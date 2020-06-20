@@ -24,15 +24,15 @@ class SearchwidgetServiceProvider implements ServiceProviderInterface
             return new SearchwidgetFactory();
         });
 
-        $app['searchwidget.view.default_options'] = array(
+        $app['searchwidget.view.default_options'] = [
             'routeName'        => null,
-            'routeParams'      => array(),
+            'routeParams'      => [],
             'pageParameter'    => '[page]',
             'proximity'        => 3,
             'next_message'     => '&raquo;',
             'previous_message' => '&laquo;',
             'default_view'     => 'default'
-        );
+        ];
 
         $app['searchwidget.view_factory'] = $app->share(function ($app) {
             $defaultView = new DefaultView();
@@ -40,11 +40,11 @@ class SearchwidgetServiceProvider implements ServiceProviderInterface
             // $twitterBoostrap3View = new TwitterBootstrap3View();
 
             $factoryView = new ViewFactory();
-            $factoryView->add(array(
+            $factoryView->add([
                 $defaultView->getName() => $defaultView,
                 // $twitterBoostrapView->getName() => $twitterBoostrapView,
                 // $twitterBoostrap3View->getName() => $twitterBoostrap3View,
-            ));
+            ]);
 
             return $factoryView;
         });
@@ -61,7 +61,7 @@ class SearchwidgetServiceProvider implements ServiceProviderInterface
 
     public function boot(Application $app)
     {
-        $options = isset($app['searchwidget.view.options']) ? $app['searchwidget.view.options'] : array();
+        $options = isset($app['searchwidget.view.options']) ? $app['searchwidget.view.options'] : [];
         $app['searchwidget.view.options'] = array_replace($app['searchwidget.view.default_options'], $options);
     }
 }

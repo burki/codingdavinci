@@ -7,15 +7,15 @@ class Searchwidget
     protected $request;
     protected $session = null;
 
-    protected $values = array();
+    protected $values = [];
     protected $routeName;
-    protected $sort_by = array();
+    protected $sort_by = [];
     protected $sort_by_key = 'sort_by';
-    protected $filters = array();
+    protected $filters = [];
 
     /**
     */
-    public function __construct($request, $session = null, $options = array())
+    public function __construct($request, $session = null, $options = [])
     {
         $this->request = $request;
         $this->values = $request->request->all();
@@ -30,12 +30,12 @@ class Searchwidget
         return $this->request;
     }
 
-    public function addSortBy($name, $options = array())
+    public function addSortBy($name, $options = [])
     {
         $this->sort_by[$name] = $options;
     }
 
-    public function addFilter($name, $options = array())
+    public function addFilter($name, $options = [])
     {
         $this->filters[$name] = $options;
     }
@@ -66,7 +66,7 @@ class Searchwidget
             $current_sort = explode(':', $current_sort, 2);
             if (array_key_exists($current_sort[0], $this->sort_by)) {
                 $sort_by = $current_sort[0];
-                if (count($current_sort) > 1 && in_array($current_sort[1], array('asc', 'desc'))) {
+                if (count($current_sort) > 1 && in_array($current_sort[1],[ 'asc', 'desc' ])) {
                     $sort_by_dir = $current_sort[1];
                 }
             }
@@ -79,7 +79,7 @@ class Searchwidget
             $sort_by_dir = 'asc'; // TODO: check if overriden in options
         }
 
-        return array($sort_by, $sort_by_dir);
+        return [ $sort_by, $sort_by_dir ];
     }
 
     public function getFilters()
@@ -87,11 +87,11 @@ class Searchwidget
         return $this->filters;
     }
 
-    public function getActiveFilters($options = array())
+    public function getActiveFilters($options = [])
     {
-        $active = array();
+        $active = [];
         foreach ($this->filters as $name => $filter) {
-            $filter_options = array();
+            $filter_options = [];
             if (array_key_exists($name, $options)) {
                 $filter_options = $options[$name];
             }

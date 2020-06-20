@@ -1,0 +1,26 @@
+{% extends 'layout.html.twig' %}
+
+{% block content %}
+	<h1>Verlage</h1>
+	<div class="search-widget">
+		{{ searchwidget(searchwidget) }}
+	</div>
+
+	<ul class="listing">
+		{% for entry in entries %}
+		<li>
+			{% if entry['publisher_id'] is not null %}
+			<a href="{{ path('publisher-detail', { id: entry['publisher_id'] }) }}">{% endif %}
+			{{ entry['name'] }}
+			{% if entry['publisher_id'] is not null %}</a>{% endif %}
+			({{ entry['publicationCountSort'] }})
+		</li>
+
+		{% endfor %}
+	</ul>
+
+	{% if pager.haveToPaginate %}
+		{{ pagerfanta(pager) }}
+	{% endif %}
+
+{% endblock %}

@@ -18,7 +18,7 @@ class PlaceController
         // Select your items.
         $dql = "SELECT P.id, P.name, C.iso2, P.latitude, P.longitude, P.geonames, P.gnd FROM Entities\Place P JOIN P.country C";
 
-        $conditions = array();
+        $conditions = [];
         $q = $request->get('q');
         if (!empty($q)) {
             $conditions['q'] = $q;
@@ -55,33 +55,10 @@ class PlaceController
         return new JsonResponse($this->personService->getOne($id));
     } */
 
-    /*
-    public function save(Request $request)
-    {
-
-        $person = $this->getDataFromRequest($request);
-        return new JsonResponse(array("id" => $this->personService->save($note)));
-
-    }
-
-    public function update($id, Request $request)
-    {
-        $note = $this->getDataFromRequest($request);
-        $this->personService->update($id, $note);
-        return new JsonResponse($note);
-
-    }
-
-    public function delete($id)
-    {
-        return new JsonResponse($this->personService->delete($id));
-    }
-    */
-
     public function getDataFromRequest(Request $request)
     {
-        return $place = array(
+        return $place = [
             'place' => $request->request->get('place')
-        );
+        ];
     }
 }

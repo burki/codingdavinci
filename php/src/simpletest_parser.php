@@ -1,9 +1,9 @@
 <?php
     /**
-     *	base include file for SimpleTest
-     *	@package	SimpleTest
-     *	@subpackage	MockObjects
-     *	@version	$Id: parser.php,v 1.58 2004/06/02 01:25:25 lastcraft Exp $
+     *  base include file for SimpleTest
+     *  @package    SimpleTest
+     *  @subpackage MockObjects
+     *  @version    $Id: parser.php,v 1.58 2004/06/02 01:25:25 lastcraft Exp $
      */
 
     /**#@+
@@ -20,8 +20,8 @@
      *    Compounded regular expression. Any of
      *    the contained patterns could match and
      *    when one does it's label is returned.
-	 *    @package SimpleTest
-	 *    @subpackage WebTester
+     *    @package SimpleTest
+     *    @subpackage WebTester
      */
     class ParallelRegex {
         var $_patterns;
@@ -35,11 +35,15 @@
          *                            for insensitive.
          *    @access public
          */
-        function ParallelRegex($case) {
+        function __construct($case) {
             $this->_case = $case;
-            $this->_patterns = array();
-            $this->_labels = array();
+            $this->_patterns = [];
+            $this->_labels = [];
             $this->_regex = null;
+        }
+
+        function ParallelRegex($case) {
+            self::__construct($case);
         }
 
         /**
@@ -95,8 +99,8 @@
             if ($this->_regex == null) {
                 for ($i = 0; $i < count($this->_patterns); $i++) {
                     $this->_patterns[$i] = '(' . str_replace(
-                            array('/', '(', ')'),
-                            array('\/', '\(', '\)'),
+                            [ '/', '(', ')' ],
+                            [ '\/', '\(', '\)' ],
                             $this->_patterns[$i]) . ')';
                 }
                 $this->_regex = "/" . implode("|", $this->_patterns) . "/" . $this->_getPerlMatchingFlags();
@@ -116,8 +120,8 @@
 
     /**
      *    States for a stack machine.
-	 *    @package SimpleTest
-	 *    @subpackage WebTester
+     *    @package SimpleTest
+     *    @subpackage WebTester
      */
     class SimpleStateStack {
         var $_stack;
@@ -127,8 +131,12 @@
          *    @param string $start        Starting state name.
          *    @access public
          */
+        function __construct($start) {
+            $this->_stack = [ $start ];
+        }
+
         function SimpleStateStack($start) {
-            $this->_stack = array($start);
+            self::__construct($start);
         }
 
         /**
@@ -172,8 +180,8 @@
      *    content is only scanned by the PHP regex
      *    parser once. Lexer modes must not start
      *    with leading underscores.
-	 *    @package SimpleTest
-	 *    @subpackage WebTester
+     *    @package SimpleTest
+     *    @subpackage WebTester
      */
     class SimpleLexer {
         var $_regexes;
@@ -191,12 +199,16 @@
          *    @param boolean $case            True for case sensitive.
          *    @access public
          */
-        function SimpleLexer(&$parser, $start = "accept", $case = false) {
+        function __construct(&$parser, $start = "accept", $case = false) {
             $this->_case = $case;
-            $this->_regexes = array();
+            $this->_regexes = [];
             $this->_parser = &$parser;
             $this->_mode = new SimpleStateStack($start);
-            $this->_mode_handlers = array();
+            $this->_mode_handlers = [];
+        }
+
+        function SimpleLexer(&$parser, $start = "accept", $case = false) {
+            self::__construct($parser, $start, $case);
         }
 
         /**
@@ -421,23 +433,27 @@
             if (! isset($this->_regexes[$this->_mode->getCurrent()])) {
                 return false;
             }
+
             if ($raw === "") {
                 return true;
             }
+
             if ($action = $this->_regexes[$this->_mode->getCurrent()]->match($raw, $match)) {
                 $unparsed_character_count = strpos($raw, $match);
                 $unparsed = substr($raw, 0, $unparsed_character_count);
                 $raw = substr($raw, $unparsed_character_count + strlen($match));
-                return array($unparsed, $match, $action);
+
+                return [ $unparsed, $match, $action ];
             }
+
             return true;
         }
     }
 
     /**
      *    Converts HTML tokens into selected SAX events.
-	 *    @package SimpleTest
-	 *    @subpackage WebTester
+     *    @package SimpleTest
+     *    @subpackage WebTester
      */
     class SimpleSaxParser {
         var $_lexer;
@@ -451,12 +467,16 @@
          *    @param SimpleSaxListener $listener    SAX event handler.
          *    @access public
          */
-        function SimpleSaxParser(&$listener) {
+        function __construct(&$listener) {
             $this->_listener = &$listener;
             $this->_lexer = &$this->createLexer($this);
             $this->_tag = '';
-            $this->_attributes = array();
+            $this->_attributes = [];
             $this->_current_attribute = '';
+        }
+
+        function SimpleSaxParser(&$listener) {
+            self::__construct($listener);
         }
 
         /**
@@ -494,8 +514,8 @@
          *    @access private
          */
         function _getParsedTags() {
-            return array('a', 'title', 'form', 'input', 'textarea', 'select',
-                    'option', 'frameset', 'frame');
+            return [ 'a', 'title', 'form', 'input', 'textarea', 'select',
+                    'option', 'frameset', 'frame' ];
         }
 
         /**
@@ -584,7 +604,7 @@
                         $this->_tag,
                         $this->_attributes);
                 $this->_tag = "";
-                $this->_attributes = array();
+                $this->_attributes = [];
                 return $success;
             }
             if ($token != "=") {
@@ -676,8 +696,8 @@
 
     /**
      *    SAX event handler.
-	 *    @package SimpleTest
-	 *    @subpackage WebTester
+     *    @package SimpleTest
+     *    @subpackage WebTester
      *    @abstract
      */
     class SimpleSaxListener {
@@ -686,7 +706,11 @@
          *    Sets the document to write to.
          *    @access public
          */
+        function __construct() {
+        }
+
         function SimpleSaxListener() {
+            self::__construct();
         }
 
         /**
