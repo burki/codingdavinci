@@ -1,7 +1,7 @@
 {
     "config": {
         "platform": {
-            "php": "5.4.45"
+            "php": "7.2.0"
         }
     },
 
@@ -10,33 +10,37 @@
         "monolog/monolog": "~1.10",
 
         "symfony/icu": "1.1.*",
-        "symfony/yaml": "~2.3",
-        "symfony/config": "~2.3",
-        "symfony/dependency-injection": "~2.3",
+        "symfony/yaml": "2.8.*",
+        "symfony/config": "2.8.*",
+        "symfony/dependency-injection": "2.8.*",
 
         "doctrine/orm": "@stable",
-        "beberlei/DoctrineExtensions": "@stable",
+        "beberlei/doctrineextensions": "@stable",
         "gedmo/doctrine-extensions": "@stable",
         "mapado/mysql-doctrine-functions": "*",
 
-        "symfony/console": "~2.3",
+        "symfony/console": "2.8.*",
 
-        "silex/silex": "~1.3",
+        "silex/silex": "@stable",
         "dflydev/doctrine-orm-service-provider": "~1.0",
         "igorw/config-service-provider": "~1.2",
-        "twig/twig": "~1.8",
-        "symfony/twig-bridge": "~2.3",
-        "franmomu/silex-pagerfanta-provider": "~1.1",
+        "twig/twig": "1.*",
+        "symfony/twig-bridge": "2.8.*",
+        "franmomu/silex-pagerfanta-provider": "@stable",
 
-        "symfony/form": "~2.3",
-        "symfony/security": "~2.3",
-        "symfony/validator": "~2.3",
-        "symfony/translation": "~2.3",
+        "symfony/form": "2.8.*",
+        "symfony/security": "2.8.*",
+        "symfony/validator": "2.8.*",
+        "symfony/translation": "2.8.*",
 
-        "leafo/lessphp": "0.4.*",
+        "leafo/lessphp": "@stable",
         "erusev/parsedown": "dev-master",
-        "guzzle/guzzle": "~3.0",
-        "easyrdf/easyrdf": "~0.8"
+        "guzzle/guzzle": "@stable",
+        "easyrdf/easyrdf": "@stable",
+        "ddeboer/data-import": "*@stable",
+        "phpoffice/phpexcel": "*@stable",
+
+        "wikimedia/utfnormal": "^1.1"
     },
 
     "autoload": {
