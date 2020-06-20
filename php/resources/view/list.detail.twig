@@ -30,12 +30,20 @@
     {% endif %}
     </dl>
     <p>
+    {% set url_digitized = null %}
     {% if entry.__get('additionalInfos') is not empty %}
         {{ entry.__get('additionalInfos') }}<br />
     {% else %}
-        Dieser Eintrag findet sich in der Liste des schädlichen und unerwünschten Schrifttums, Stand vom 31. Dezember 1938.<br />
+        {% set url_digitized = 'https://sammlungen.ulb.uni-muenster.de/hd/periodical/pageview/' ~ (2539898 + entry.__get('pageNumberInOCRDocument')) %}
+        Dieser Eintrag findet sich in der <a href="https://sammlungen.ulb.uni-muenster.de/hd/periodical/pageview/2539891" target="_blank">Liste des schädlichen und unerwünschten Schrifttums, Stand vom 31. Dezember 1938</a>.<br />
     {% endif %}
-        Seite {{ entry.__get('pageNumberInOCRDocument') }}.
+    {% if entry.__get('pageNumberInOCRDocument') is not empty %}
+        {% if url_digitized is not empty %}
+            <a href="{{ url_digitized }}" target="_blank">Seite {{ entry.__get('pageNumberInOCRDocument') }}</a>.
+        {% else %}
+            Seite {{ entry.__get('pageNumberInOCRDocument') }}.
+        {% endif %}
+    {% endif %}
     {% if entry.__get('ssFlag') %}
         <br />Zusätzliches Verbot des Reichsführers SS: Auf Grund der "Verordnung des Reichspräsidenten zum Schutze von Volk und Staat vom 28. Februar 1933" hat der Reichsführer SS und Chef der Deutschen Polizei im Reichsministerium des Innern gegen bestimmte Schriften zusätzliches ein allgemeines Verbot ausgesprochen. Die Titel dieser Schriften sind im Reichsanzeiger veröffentlicht worden und in der vorliegenden Liste durch ein + kenntlich gemacht.
     {% endif %}
