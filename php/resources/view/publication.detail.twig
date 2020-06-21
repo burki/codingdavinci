@@ -53,9 +53,12 @@
     <p><a href="{{ path('list-detail', {'row': list.__get('row')}) }}">{{ helper.list_short(list) }}</a></p>
     {% endif %}
 
-    {% if entry.__get('gnd') is not empty or entry.__get('oclc') is not empty %}
+    {% if entry.__get('gnd') is not empty or entry.__get('oclc') is not empty or entry.__get('url') is not empty %}
     <h2>Externe Angebote</h2>
     <ul class="listing">
+    {% if entry.__get('url') is not empty %}
+        <li><a href="{{ entry.__get('url') }}" target="_blank">Volltext</a></li>
+    {% endif %}
     {% if entry.__get('gnd') is not empty %}
         <li><a href="{{ entry.__get('gnd') }}" target="_blank">Katalogeintrag Deutsche Nationalbibliothek</a></li>
     {% endif %}
