@@ -112,6 +112,11 @@ class Publication extends Base
     protected $culturegraph;
 
     /**
+    * @ORM\Column(type="string", nullable=true)
+    */
+    protected $url;
+
+    /**
      * @ORM\OneToMany(targetEntity="PublicationPerson", mappedBy="publication")
      * @ORM\OrderBy({"role" = "ASC", "personOrd" = "ASC"})
      */
