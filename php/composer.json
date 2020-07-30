@@ -36,7 +36,7 @@
         "leafo/lessphp": "@stable",
         "erusev/parsedown": "dev-master",
         "guzzle/guzzle": "@stable",
-        "easyrdf/easyrdf": "@stable",
+        "easyrdf/easyrdf": "0.9.*",
         "ddeboer/data-import": "*@stable",
         "phpoffice/phpexcel": "*@stable",
 
