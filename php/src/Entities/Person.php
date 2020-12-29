@@ -112,6 +112,11 @@ class Person extends Base
     protected $viaf;
 
     /**
+    * @ORM\Column(type="string", nullable=true)
+    */
+    protected $wikidata;
+
+    /**
     * @ORM\Column(name="lc_naf", type="string", nullable=true)
     */
     protected $lcNaf;
@@ -153,7 +158,7 @@ class Person extends Base
         if (empty($parts)) {
             return '';
         }
-        
+
         return $forename_first
             ? implode(' ', array_reverse($parts))
             : implode(', ', $parts);
