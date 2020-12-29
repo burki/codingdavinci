@@ -3,14 +3,17 @@
 {% block head %}
     <script src="{{ app.request.basepath }}/js/seealso.js"></script>
     <script>
-          var service = new SeeAlsoCollection();
-          service.services = {
+        var service = new SeeAlsoCollection();
+        service.services = {
             'pndaks' : new SeeAlsoService('//beacon.findbuch.de/seealso/pnd-aks/')
-           };
-           service.views = { 'seealso-ul' : new SeeAlsoUL({
-                                                            linkTarget: '_blank',
-                                                            maxItems: 100 }) };
-           service.replaceTagsOnLoad();
+        };
+        service.views = {
+            'seealso-ul' : new SeeAlsoUL({
+                linkTarget: '_blank',
+                maxItems: 100
+            })
+        };
+        service.replaceTagsOnLoad();
     </script>
 {% endblock %}
 
@@ -18,11 +21,9 @@
     <div itemscope itemtype="http://schema.org/Person">
     <h1 itemprop="name"><a href="{{ path('person-detail', {'id': entry.__get('id')}) }}">{{ entry.__get('forename') }} {{ entry.__get('surname') }}</a></h1>
     <form class="edit" action="#" method="post">
-    {{ form_widget(form) }}
-
-    <input type="submit" name="submit" value="Speichern" />
+        {{ form_widget(form) }}
+        <input type="submit" name="submit" value="Speichern" />
     </form>
-
 
     <dl>
     {% if entry.__get('placeOfBirth') is not empty or entry.__get('dateOfBirth') is not empty %}
@@ -43,5 +44,4 @@
     Gemeinsame Normdatei: <a href="{{ entry.__get('gnd') }}" target="_blank">{{ gnd }}</a>
     <div title="{{ gnd }}" class="pndaks seealso-ul"></div>
     {% endif %}
-
 {% endblock %}

@@ -167,6 +167,7 @@ class PlaceController
                     if (!array_key_exists($gndPlaceOfDeath, $personsByPlace)) {
                         $personsByPlace[$gndPlaceOfDeath] = [];
                     }
+
                     $personsByPlace[$gndPlaceOfDeath][$person->id] = $person;
                     $placesGnds[$gndPlaceOfDeath] = true;
                     $lifePaths[$person->id] = [ $entity->gnd, $gndPlaceOfDeath ];
@@ -177,6 +178,7 @@ class PlaceController
                 if (!array_key_exists($entity->gnd, $personsByPlace)) {
                     $personsByPlace[$entity->gnd] = [];
                 }
+
                 $personsByPlace[$entity->gnd][$person->id] = $person;
                 $gndPlaceOfBirth = $person->gndPlaceOfBirth;
                 if (!empty($gndPlaceOfBirth)) {
@@ -239,12 +241,15 @@ class PlaceController
                 if ($place['latitude'] > $max_latitude) {
                     $max_latitude = $place['latitude'];
                 }
+
                 if ($place['latitude'] < $min_latitude) {
                     $min_latitude = $place['latitude'];
                 }
+
                 if ($place['longitude'] > $max_longitude) {
                     $max_longitude = $place['longitude'];
                 }
+
                 if ($place['longitude'] < $min_longitude) {
                     $min_longitude = $place['longitude'];
                 }
@@ -304,34 +309,6 @@ EOT;
         return $app['twig']->render('place.detail.twig', $render_params);
     }
 
-    /*
-    public function gndBeaconAction(Request $request, BaseApplication $app) {
-        $em = $app['doctrine'];
-
-        $ret = '#FORMAT: BEACON' . "\n" . '#PREFIX: http://d-nb.info/gnd/' . "\n";
-        $ret .= sprintf('#TARGET: %s/gnd/{ID}',
-                        $app['url_generator']->generate('place', [], true))
-              . "\n";
-        $ret .= '#NAME: Verbrannte und Verbannte' . "\n";
-        $ret .= '#MESSAGE: Eintrag in der Liste der im Nationalsozialismus verbotenen Publikationen und Autoren' . "\n";
-
-        $dql = "SELECT DISTINCT P.id, P.gnd FROM Entities\Place P WHERE P.status >= 0 AND P.gnd IS NOT NULL ORDER BY P.gnd";
-        $query = $em->createQuery($dql);
-        // $query->setMaxResults(10);
-        foreach ($query->getResult() as $result) {
-            if (preg_match('/d\-nb\.info\/gnd\/([0-9xX]+)$/', $result['gnd'], $matches)) {
-                $gnd_id = $matches[1];
-                $ret .=  $gnd_id . "\n";
-            }
-        }
-
-        return new Response($ret,
-                            200,
-                            [ 'Content-Type' => 'text/plain; charset=UTF-8' ]
-                            );
-    }
-    */
-
     public function editAction(Request $request, BaseApplication $app)
     {
         $edit_fields = [ 'gnd', 'geonames', 'name' ];
@@ -378,6 +355,7 @@ EOT;
                     $entity->$key = $data[$key];
                 }
             }
+
             if ($persist) {
                 $em->persist($entity);
                 $em->flush();
