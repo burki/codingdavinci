@@ -5,173 +5,166 @@ namespace Helper;
 
 class Wikidata
 {
-    const BASE_URL = 'http://wdq.wmflabs.org/api';
+    const BASE_URL = 'https://query.wikidata.org/sparql';
 
-    static $KEY_MAP = [
-        19 => 'placeOfBirth',
-        20 => 'placeOfDeath',
-        21 => 'sex',
-        214 => 'viaf',
-        244 => 'lc_naf',
-        569 => 'dateOfBirth',
-        570 => 'dateOfDeath',
+    static $WIKIDATA_PROPERTY_MAP = [
+        'P19' => 'placeOfBirth',
+        'P20' => 'placeOfDeath',
+        'P21' => 'gender',
+        'P569' => 'dateOfBirth',
+        'P570' => 'dateOfDeath',
+
+        'P227' => 'gnd',
+        'P214' => 'viaf',
+        'P244' => 'lc_naf',
     ];
 
-    static $LABELS = [];
-
-    private static function getItemLabel($id, $lang_preferred)
+    static function fetchByGnd($gnd, $lang = 'de', $properties = null)
     {
-        // only query once
-        if (array_key_exists($lang_preferred, self::$LABELS)
-            && array_key_exists($id, self::$LABELS[$lang_preferred]))
-        {
-            return self::$LABELS[$lang_preferred][$id];
+        $entity = null;
+
+        $pid = array_search('gnd', self::$WIKIDATA_PROPERTY_MAP);
+        if (false === $pid) {
+            return $entity;
         }
 
-        // labels not working, so go through mediawiki-api
-        $id_full = 'Q' . $id;
-        $url = sprintf('https://www.wikidata.org/w/api.php?action=wbgetentities&ids=%s&props=labels&format=json&languages=%s&languagefallback=' ,
-                       $id_full, $lang_preferred);
+        $qids = self::lookupQidByProperty($pid, $gnd);
 
-        $data = json_decode(file_get_contents($url), TRUE);
-        if (isset($data['entities']) && isset($data['entities'][$id_full])
-            && !empty($data['entities'][$id_full]['labels']))
-        {
-            foreach ($data['entities'][$id_full]['labels'] as $lang => $label) {
-                if ($lang_preferred == $lang) {
-                    if (!array_key_exists($lang_preferred, self::$LABELS)) {
-                        self::$LABELS[$lang_preferred] = [];
-                    }
-                    return self::$LABELS[$lang_preferred][$id] = $label['value'];
-                }
-            }
-        }
-    }
-
-    private static function normalizePropertyValue ($value, $type, $lang)
-    {
-        switch ($type) {
-            case 'item':
-                return self::getItemLabel($value, $lang);
-                break;
-
-            case 'time':
-                // we currently handle only dates greater than 0
-                if (preg_match('/([0-9]+\-[0-9]+\-[0-9]+)T/', $value, $matches)) {
-                    return preg_replace('/^0+/', '', $matches[1]); // trim leading 0es
-                }
-                die('TODO: handle time ' . $value);
-                break;
-
-            default:
-                return $value;
-        }
-    }
-
-    private static function getPropertyByIdentifier ($data, $identifier, $property, $lang, $unresolved = false)
-    {
-        $properties = $data['props'][$property];
-        if (empty($properties)) {
-            return;
-        }
-        foreach ($properties as $property_entry) {
-            if ($property_entry[0] == $identifier) {
-                return $unresolved || in_array($property, [ 21 ]) // leave certain labels unresolved
-                    ? $property_entry[2]
-                    : self::normalizePropertyValue($property_entry[2], $property_entry[1], $lang);
-            }
-        }
-    }
-
-
-    private static function getItems ($q, $properties, $lang)
-    {
-        // see http://wdq.wmflabs.org/api_documentation.html
-        // and https://www.penflip.com/nichtich/normdaten-in-wikidata/blob/master/wikidata-weiternutzen.txt
-
-        // labels are currently not active
-        // https://bitbucket.org/magnusmanske/wikidataquery/issue/1/labels-not-working-question
-        $url = self::BASE_URL
-             . sprintf('?q=%s&props=%s&labels=%s',
-                       $q, implode(',', $properties), $lang);
-// var_dump($url);
-        $data = json_decode(file_get_contents($url), TRUE);
-
-        if (FALSE === $data || empty($data['items'])) {
-            return;
-        }
-
-        return $data;
-    }
-
-    static function fetchByGnd ($gnd, $properties = [
-            569, // date of birth
-            19, // place of birth
-            570, // date of death
-            20, // place of death
-            21, // sex or gender
-            214, // Viaf-identifier
-            244, // LCCN identifier
-            646, // Freebase identifier
-        ], $lang = 'de', $options = [])
-    {
-        $q = sprintf('string[227:%%22%s%%22]', $gnd); // gnd is 227
-        $data = self::getItems($q, $properties, $lang);
-        if (!isset($data)) {
-            return;
-        }
-
-        foreach ($data['items'] as $identifier) {
+        foreach ($qids as $qid) {
             $entity = new Wikidata();
-            $entity->identifier = $identifier;
+            $entity->identifier = $qid;
             $entity->gnd = $gnd;
 
-            foreach ($properties as $property_key) {
-                $property = self::getPropertyByIdentifier($data, $identifier, $property_key, $lang);
-                if (!empty($property) && array_key_exists($property_key, self::$KEY_MAP)) {
-                    switch ($property_key) {
-                        case 21: // sex or gender
-                            switch ($property) {
-                                case 6581072:
-                                    $entity->{self::$KEY_MAP[$property_key]} = 'F';
+            $properties = self::lookupProperties($qid, array_keys(self::$WIKIDATA_PROPERTY_MAP), $lang);
+
+            foreach ($properties as $property) {
+                $propertyId = (string)$property->propertyId;
+                $propertyValue = $property->property;
+                if ($propertyValue instanceOf \EasyRdf_Literal) {
+                    $propertyValue = $propertyValue->getValue();
+                }
+
+                if ($propertyValue instanceOf \DateTime) {
+                    $propertyValue = $propertyValue->format('Y-m-d');
+                }
+
+                if (!empty($propertyValue) && array_key_exists($propertyId, self::$WIKIDATA_PROPERTY_MAP)) {
+                    switch ($propertyId) {
+                        case 'P21': // sex or gender
+                            switch ((string)$propertyValue) {
+                                case 'http://www.wikidata.org/entity/Q6581072':
+                                    $entity->{self::$WIKIDATA_PROPERTY_MAP[$propertyId]} = 'female';
                                     break;
 
-                                case 6581097:
-                                    $entity->{self::$KEY_MAP[$property_key]} = 'M';
+                                case 'http://www.wikidata.org/entity/Q6581097':
+                                    $entity->{self::$WIKIDATA_PROPERTY_MAP[$propertyId]} = 'male';
                                     break;
 
                                 default:
-                                    die('TODO: handle P21: ' . $property);
+                                    die('TODO: handle P21: ' . $propertyValue);
                             }
                             break;
 
-                        case 19:
-                        case 20:
-                            $item = self::getPropertyByIdentifier($data, $identifier, $property_key, $lang, true);
-                            $place_query = 'items[' . $item . ']';
-                            $place_data = self::getItems($place_query, [ 227 ], $lang);
-                            $gnd = self::getPropertyByIdentifier($place_data, $item, 227, $lang, true);
-                            if (!empty($gnd)) {
-                                $entity->{'gnd' . ucfirst(self::$KEY_MAP[$property_key])} = $gnd;
-                            }
-                            // fall through
                         default:
-                            $entity->{self::$KEY_MAP[$property_key]} = $property;
+                            if ($propertyValue instanceOf \EasyRdf_Resource) {
+                                $propertyValue = $property->propertyLabel;
+                            }
+                            else if ($propertyValue instanceOf \EasyRdf_Literal) {
+                                $propertyValue = (string)$propertyValue;
+                            }
+
+                            if (in_array($propertyId, [ 'P569', 'P570' ])) {
+                                if (preg_match('/^t/', $propertyValue)) {
+                                    // we don't currently handle values like t1920690516
+                                    break;
+                                }
+                            }
+
+                            $entity->{self::$WIKIDATA_PROPERTY_MAP[$propertyId]} = $propertyValue;
                             break;
                     }
                 }
             }
-            break; // we currently take only first macht
+
+            break; // we currently take only first match
         }
+
         return $entity;
     }
 
-    var $identifier = NULL;
+    private static function getSparqlClient()
+    {
+        return new \EasyRdf_Sparql_Client(self::BASE_URL);
+    }
+
+    /**
+     * Executes a SPARQL query
+     *
+     * @param string $query
+     * @param \EasyRdf\Sparql\Client $client
+     *
+     * @return Result $result
+     */
+    protected static function executeSparqlQuery($query, $sparqlClient = null)
+    {
+        if (is_null($sparqlClient)) {
+            $sparqlClient = self::getSparqlClient();
+        }
+
+        return $sparqlClient->query($query);
+    }
+
+    protected static function lookupQidByProperty($pid, $value, $sparqlClient = null)
+    {
+        $query = sprintf("SELECT ?wd WHERE { ?wd wdt:%s '%s'. }",
+                         $pid, addslashes($value));
+
+        $result = self::executeSparqlQuery($query, $sparqlClient);
+
+        $ret = [];
+        foreach ($result as $row) {
+            $uri = (string)$row->wd;
+
+            if (preg_match('~/(Q\d+)$~', $uri, $matches)) {
+                $ret[] = $matches[1];
+            }
+        }
+
+        return $ret;
+    }
+
+    protected static function lookupProperties($qid, $propertyIds, $language = 'en', $sparqlClient = null)
+    {
+        $unionParts = [];
+
+        foreach ($propertyIds as $pid) {
+            $unionParts[] = sprintf('{ wd:%s wdt:%s ?property. BIND("%s" as ?propertyId) }',
+                                    $qid, $pid, $pid);
+        }
+
+        if (empty($unionParts)) {
+            return [];
+        }
+
+        $languages = [ sprintf('"%s"', $language) ];
+        if ('en' != $language) {
+            $languages[] = '"en"'; // fallback
+        }
+
+        $query = 'SELECT ?property ?propertyId ?propertyLabel WHERE {'
+            . implode(' UNION ', $unionParts)
+            . ' SERVICE wikibase:label { bd:serviceParam wikibase:language ' . implode(', ', $languages) . ' }'
+            . '}';
+
+        return self::executeSparqlQuery($query);
+    }
+
+    var $identifier = null;
     var $gnd;
-    var $viaf = NULL;
-    var $lc_naf = NULL;
+    var $viaf = null;
+    var $lc_naf = null;
     var $preferredName;
-    var $sex;
+    var $gender;
     var $academicTitle;
     var $dateOfBirth;
     var $placeOfBirth;
