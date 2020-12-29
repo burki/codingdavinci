@@ -81,6 +81,7 @@ class PersonController
                                       array_keys($orders)
                                      ));
         }
+
         $query = $em->createQuery($dql);
 
         // Limit per page.
@@ -165,7 +166,7 @@ class PersonController
             'ddb_count' => 0
         ];
 
-        if (preg_match('/d\-nb\.info\/gnd\/([0-9xX]+)/', $entity->gnd, $matches)) {
+        if (preg_match('/d\-nb\.info\/gnd\/([0-9\-xX]+)/', $entity->gnd, $matches)) {
             $render_params['gnd'] = $matches[1];
 
             $gndService = $app['gnd-service'];
@@ -181,7 +182,7 @@ class PersonController
     public function gndBeaconAction(Request $request, BaseApplication $app) {
         $em = $app['doctrine'];
 
-        $ret = '#FORMAT: BEACON' . "\n" . '#PREFIX: http://d-nb.info/gnd/' . "\n";
+        $ret = '#FORMAT: BEACON' . "\n" . '#PREFIX: https://d-nb.info/gnd/' . "\n";
         $ret .= sprintf('#TARGET: %s/gnd/{ID}',
                         $app['url_generator']->generate('person', [], true))
               . "\n";
@@ -204,7 +205,12 @@ class PersonController
 
     public function editAction(Request $request, BaseApplication $app)
     {
-        $edit_fields = [ 'gnd', 'forename', 'surname' ];
+        $edit_fields = [
+            'gnd',
+            'forename', 'surname',
+            'dateOfBirth', 'dateOfDeath',
+            'biographicalOrHistoricalInformation',
+        ];
 
         $em = $app['doctrine'];
 
@@ -230,6 +236,27 @@ class PersonController
                 'label' => 'Vorname',
                 'required' => false,
             ])
+            ->add('gender', 'choice', [
+                'label' => 'Geschlecht',
+                'required' => false,
+                'placeholder' => 'unbekannt',
+                'choices'  => [
+                    'F' => 'F',
+                    'M' => 'M',
+                ],
+            ])
+            ->add('dateOfBirth', 'text', [
+                'label' => 'Geburt',
+                'required' => false,
+            ])
+            ->add('dateOfDeath', 'text', [
+                'label' => 'Tod',
+                'required' => false,
+            ])
+            ->add('biographicalOrHistoricalInformation', 'text', [
+                'label' => 'Bio',
+                'required' => false,
+            ])
             ->add('gnd', 'text', [
                 'label' => 'GND',
                 'required' => false,
@@ -242,7 +269,7 @@ class PersonController
             $data = $form->getData();
             $persist = false;
             foreach ($edit_fields as $key) {
-                $value_before =  $entity->$key;
+                $value_before = $entity->$key;
                 if ($value_before !== $data[$key]) {
                     $persist = true;
                     $entity->$key = $data[$key];
