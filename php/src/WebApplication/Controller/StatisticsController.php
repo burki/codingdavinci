@@ -54,12 +54,12 @@ class StatisticsController
         // display the authors by birth-year, the publications by issued-year
         $em = $app['doctrine'];
         $dbconn = $em->getConnection();
-        $querystr = "SELECT 'active' AS type, COUNT(*) AS how_many FROM Person"
+        $querystr = "SELECT 'active' AS type, COUNT(*) AS how_many FROM person"
                   . " WHERE status >= 0 AND date_of_birth IS NOT NULL"
                   // . "  AND sex IS NOT NULL"
                   ;
         $querystr .= " UNION SELECT 'total' AS type, COUNT(*) AS how_many"
-                   . " FROM Person WHERE status >= 0";
+                   . " FROM person WHERE status >= 0";
         $stmt = $dbconn->query($querystr);
         $subtitle_parts = [];
         while ($row = $stmt->fetch()) {
@@ -77,7 +77,7 @@ class StatisticsController
             $querystr = 'SELECT YEAR(' . $date_field . ') AS year'
                       // . ', sex'
                       . ', COUNT(*) AS how_many'
-                      . ' FROM Person WHERE status >= 0 AND ' . $date_field . ' IS NOT NULL'
+                      . ' FROM person WHERE status >= 0 AND ' . $date_field . ' IS NOT NULL'
                       // . ' AND sex IS NOT NULL'
                       . ' GROUP BY YEAR(' . $date_field. ')'
                       // . ', sex'
@@ -90,12 +90,15 @@ class StatisticsController
                 if (0 == $min_year || $row['year'] < $min_year) {
                     $min_year = $row['year'];
                 }
+
                 if ($row['year'] > $max_year) {
                     $max_year = $row['year'];
                 }
+
                 if (!isset($data[$row['year']])) {
                     $data[$row['year']] = [];
                 }
+
                 $data[$row['year']][$key] = $row['how_many'];
             }
         }
@@ -103,28 +106,21 @@ class StatisticsController
         if ($min_year < 1830) {
             $min_year = 1830;
         }
+
         if ($max_year > 2000) {
             $max_year = 2000;
         }
 
         $total_works = 0;
-        /*
-        $querystr = 'SELECT YEAR(date_of_birth) AS year, COUNT(DISTINCT Publication.id) AS how_many FROM Person LEFT OUTER JOIN PublicationPerson ON PublicationPerson.person_id=Person.id LEFT OUTER JOIN Publication ON Publication.id=PublicationPerson.publication_id AND Publication.status >= 0 WHERE Person.status >= 0 AND date_of_birth IS NOT NULL'
-                  // . ' AND sex IS NOT NULL'
-                  . ' GROUP BY YEAR(date_of_birth) ORDER BY YEAR(date_of_birth)';
-        $stmt = $dbconn->query($querystr);
 
-        while ($row = $stmt->fetch()) {
-            $total_works += $row['how_many'];
-            $data[$row['year']]['works'] = $row['how_many'];
-        }
-        // var_dump(1.0 * $total_works / $total_active);
-        */
-
-        $querystr = 'SELECT PublicationPerson.publication_ord AS year, Publication.complete_works = 0 AS base, COUNT(DISTINCT Publication.id) AS how_many FROM Person LEFT OUTER JOIN PublicationPerson ON PublicationPerson.person_id=Person.id LEFT OUTER JOIN Publication ON Publication.id=PublicationPerson.publication_id AND Publication.status >= 0 WHERE Person.status >= 0 AND PublicationPerson.publication_ord IS NOT NULL'
+        $querystr = 'SELECT publicationperson.publication_ord AS year, publication.complete_works = 0 AS base, COUNT(DISTINCT publication.id) AS how_many'
+                  . ' FROM person'
+                  . ' LEFT OUTER JOIN publicationperson ON publicationperson.person_id=person.id'
+                  . ' LEFT OUTER JOIN publication ON publication.id=publicationperson.publication_id AND publication.status >= 0'
+                  . ' WHERE person.status >= 0 AND publicationperson.publication_ord IS NOT NULL'
                   // . ' AND sex IS NOT NULL'
-                  . ' GROUP BY PublicationPerson.publication_ord, Publication.complete_works = 0'
-                  . ' ORDER BY PublicationPerson.publication_ord, Publication.complete_works = 0';
+                  . ' GROUP BY publicationperson.publication_ord, publication.complete_works = 0'
+                  . ' ORDER BY publicationperson.publication_ord, publication.complete_works = 0';
         $stmt = $dbconn->query($querystr);
         while ($row = $stmt->fetch()) {
             $total_works += $row['how_many'];
@@ -176,8 +172,9 @@ class StatisticsController
         }
 
         $fields = [ 'title', 'other_title_information' ];
-        $querystr = "SELECT issued, " . implode(', ', $fields) . " FROM Publication"
-                  . " WHERE Publication.status >= 0"
+        $querystr = "SELECT issued, " . implode(', ', $fields)
+                  . " FROM publication"
+                  . " WHERE publication.status >= 0"
             ;
         $stmt = $dbconn->query($querystr);
 
@@ -295,8 +292,8 @@ class StatisticsController
         foreach ($keys as $key) {
             $fields = [ 'place_of_' . $key ];
             $querystr = "SELECT YEAR(date_of_" . $key . ") AS issued, "
-                      . implode(', ', $fields) . " FROM Person"
-                      . " WHERE Person.status >= 0"
+                      . implode(', ', $fields) . " FROM person"
+                      . " WHERE person.status >= 0"
                       ;
             $stmt = $dbconn->query($querystr);
 
@@ -397,14 +394,14 @@ class StatisticsController
         $em = $app['doctrine'];
         $dbconn = $em->getConnection();
 
-        $querystr = 'SELECT Country.iso3 AS country_code, Country.name_de AS name_de'
-                  . ', COUNT(DISTINCT Publication.id) AS how_many'
-                  . ' FROM Publication'
-                  . ' JOIN Place ON Publication.geonames_place_of_publication=Place.geonames'
-                  . ' JOIN Country ON Place.country_code=Country.iso2'
-                  . ' WHERE Publication.status >= 0'
-                  . ' GROUP BY Country.iso3'
-                  // . ' ORDER BY PublicationPerson.publication_ord, Publication.complete_works = 0'
+        $querystr = 'SELECT country.iso3 AS country_code, country.name_de AS name_de'
+                  . ', COUNT(DISTINCT publication.id) AS how_many'
+                  . ' FROM publication'
+                  . ' JOIN place ON publication.geonames_place_of_publication=place.geonames'
+                  . ' JOIN country ON place.country_code=country.iso2'
+                  . ' WHERE publication.status >= 0'
+                  . ' GROUP BY country.iso3'
+                  // . ' ORDER BY publicationperson.publication_ord, publication.complete_works = 0'
                   ;
         $stmt = $dbconn->query($querystr);
         $publications_by_country = [];

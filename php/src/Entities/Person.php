@@ -7,7 +7,7 @@ use Gedmo\Mapping\Annotation as Gedmo; // for Gedmo extensions annotations
 /**
 * The Person on the NS-Verbotsliste
 *
-* @ORM\Table(name="Person", options={"engine":"MyISAM"})
+* @ORM\Table(name="person", options={"engine":"MyISAM"})
 * @ORM\Entity
 */
 class Person extends Base

@@ -7,7 +7,7 @@ use Gedmo\Mapping\Annotation as Gedmo; // for Gedmo extensions annotations
 /**
 * The Publisher on the NS-Verbotsliste
 *
-* @ORM\Table(name="Publisher", options={"engine":"MyISAM"})
+* @ORM\Table(name="publisher", options={"engine":"MyISAM"})
 * @ORM\Entity
 */
 class Publisher extends Base
