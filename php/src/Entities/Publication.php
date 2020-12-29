@@ -7,7 +7,7 @@ use Gedmo\Mapping\Annotation as Gedmo; // this will be like an alias for Gedmo e
 /**
 * The Publication on the NS-Verbotsliste
 *
-* @ORM\Table(name="Publication", options={"engine":"MyISAM"})
+* @ORM\Table(name="publication", options={"engine":"MyISAM"})
 * @ORM\Entity
 */
 class Publication extends Base

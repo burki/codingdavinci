@@ -7,7 +7,7 @@ use Gedmo\Mapping\Annotation as Gedmo; // this will be like an alias for Gedmo e
 /**
 * The NS-Verbotsliste
 *
-* @ORM\Table(name="List")
+* @ORM\Table(name="list")
 * @ORM\Entity
 */
 class BannedList extends Base

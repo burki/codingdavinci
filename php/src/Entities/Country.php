@@ -7,7 +7,7 @@ use Gedmo\Mapping\Annotation as Gedmo; // this will be like an alias for Gedmo e
 /**
 * The Country
 *
-* @ORM\Table(name="Country", options={"engine":"MyISAM"})
+* @ORM\Table(name="country", options={"engine":"MyISAM"})
 * @ORM\Entity
 */
 class Country extends Base
