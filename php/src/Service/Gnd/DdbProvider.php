@@ -4,7 +4,7 @@ namespace Service\Gnd;
 
 class DdbProvider implements GndProviderInterface
 {
-    const URL_TEMPLATE = 'https://api.deutsche-digitale-bibliothek.de/entities?query=id:%22http://d-nb.info/gnd/{gnd}%22&oauth_consumer_key={oauth_consumer_key}';
+    const URL_TEMPLATE = 'https://api.deutsche-digitale-bibliothek.de/entities?query=id:%22https://d-nb.info/gnd/{gnd}%22&oauth_consumer_key={oauth_consumer_key}';
 
     /**
      * @var \Guzzle\ClientInterface $http_client
