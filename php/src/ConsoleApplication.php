@@ -6,7 +6,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-
 class ConsoleApplication extends BaseApplication
 {
     protected $application;
@@ -46,20 +45,8 @@ abstract class BaseCommand extends Command
 
     protected function normalizeUnicode($value)
     {
-        return \UtfNormal\Validator::toNFC(); // wikimedia/utfnormal
-
-        if (!class_exists('\Normalizer')) {
-            return $value;
-        }
-
-        if (!\Normalizer::isNormalized($value)) {
-            $normalized = \Normalizer::normalize($value);
-            if (false !== $normalized) {
-                $value = $normalized;
-            }
-        }
-
-        return $value;
+        // use wikimedia/utfnormal
+        return \UtfNormal\Validator::toNFC($value);
     }
 
     protected function getBasePath()
@@ -78,18 +65,22 @@ abstract class BaseCommand extends Command
                 if (empty($data)) {
                     continue;
                 }
+
                 if (false === $headers) {
                     $headers = $data;
                     continue;
                 }
+
                 $record = [];
                 for ($i = 0; $i < count($headers); $i++) {
                     $record[$headers[$i]] = isset($data[$i]) ? trim($data[$i]) : null;
                 }
                 $entries[] = $record;
             }
+
             fclose($handle);
         }
+
         return $entries;
     }
 
@@ -134,11 +125,13 @@ abstract class BaseCommand extends Command
         if (!isset($this->client)) {
             $this->client = new \EasyRdf_Http_Client();
         }
+
         $this->client->setUri($url);
         $this->client->resetParameters(true); // clear headers
         foreach ($headers as $name => $val) {
             $this->client->setHeaders($name, $val);
         }
+
         try {
             $response = $this->client->request();
             if ($response->getStatus() < 400) {
@@ -147,9 +140,11 @@ abstract class BaseCommand extends Command
         } catch (\Exception $e) {
             $content = null;
         }
+
         if (!isset($content)) {
             return false;
         }
+
         $json = json_decode($content, true);
 
         // API error
@@ -159,7 +154,6 @@ abstract class BaseCommand extends Command
 
         return $json;
     }
-
 }
 
 class CreateCommand extends BaseCommand
@@ -236,7 +230,8 @@ class ImportCommand extends BaseCommand
                 null,
                 InputOption::VALUE_NONE,
                 'If set, existing entries will be updates'
-            );
+            )
+            ;
     }
 
     private function insertUpdatePersonRefs($entity, $person_gnds, $role = 'aut')
@@ -258,11 +253,13 @@ class ImportCommand extends BaseCommand
                 if ($personRef->role != $role) {
                     continue;
                 }
+
                 $otherPerson = $personRef->person;
                 if ($otherPerson->gnd == $person_gnd) {
                     $add_ref = false;
                     break;
                 }
+
                 if ($personRef->publicationOrd > $max_ord) {
                     $max_ord = $personRef->publicationOrd;
                 }
@@ -291,6 +288,7 @@ class ImportCommand extends BaseCommand
             if (empty($publication_entry['titleGND'])) {
                 return false;
             }
+
             $entity = $this->em->getRepository('Entities\Publication')->findOneByGnd($publication_entry['titleGND']);
         }
 
@@ -307,7 +305,6 @@ class ImportCommand extends BaseCommand
                 $entity->gnd = $publication_entry['titleGND'];
                 $entity->personRefs = [];
             }
-
         }
 
         if ($update_existing || $created) {
@@ -329,6 +326,7 @@ class ImportCommand extends BaseCommand
         if (!empty($publication_entry['contributorGND'])) {
             $this->insertUpdatePersonRefs($entity, preg_split('/\s*\;\s*/', $publication_entry['contributorGND']), 'edt');
         }
+
         $this->em->persist($entity);
         $this->em->flush();
 
@@ -340,7 +338,9 @@ class ImportCommand extends BaseCommand
         if (empty($person['gnd'])) {
             return false;
         }
-        $entity = $this->em->getRepository('Entities\Person')->findOneByGnd($person['gnd']);
+
+        $entity = $this->em->getRepository('Entities\Person')
+                    ->findOneByGnd($person['gnd']);
 
         if (!isset($entity)) {
             // we currently don't create missing
@@ -352,8 +352,7 @@ class ImportCommand extends BaseCommand
         }
 
         if ($update_existing) {
-            foreach (['forename', 'surname' ] as $key)
-            {
+            foreach ([ 'forename', 'surname' ] as $key) {
                 if (array_key_exists($key, $person)) {
                     $entity->{$key} = $person[$key];
                 }
@@ -404,18 +403,20 @@ class ImportCommand extends BaseCommand
                 if ('' === $value) {
                     $value = null;
                 }
+
                 if ('ssFlag' == $key) {
                     $value = 'true' == $value;
                 }
+
                 if ('completeWorks' == $key) {
                     if (!isset($value)) {
                         $value = 0;
                     }
                 }
+
                 $entity->{$key} = $value;
             }
         }
-
 
         $this->em->persist($entity);
         $this->em->flush();
@@ -455,6 +456,7 @@ class ImportCommand extends BaseCommand
                 if ('' === $value) {
                     $value = null;
                 }
+
                 $entity->{$target} = $value;
             }
         }
@@ -466,6 +468,7 @@ class ImportCommand extends BaseCommand
         if (!empty($publisher['preferredName'])) {
             $names[] = trim($publisher['preferredName']);
         }
+
         if (!empty($publisher['alternateNames'])) {
             $lines = preg_split('/\s*\n\s*/', $publisher['alternateNames']);
             foreach ($lines as $line) {
@@ -480,6 +483,7 @@ class ImportCommand extends BaseCommand
 
         foreach ($publications as $publication) {
             $publishedBy = $publication->publishedBy;
+
             if (is_null($publishedBy)) {
                 var_dump($publication->publisher);
                 var_dump($entity->preferredName);
@@ -524,6 +528,7 @@ class ImportCommand extends BaseCommand
                 if ('' === $value) {
                     $value = null;
                 }
+
                 $entity->{$target} = $value;
             }
         }
@@ -557,9 +562,11 @@ class ImportCommand extends BaseCommand
                     $file = $this->getBasePath() . '/resources/data/publicationCompleteWorks.tab';
                     $publications = $this->readCsv($file, "\t");
                     break;
+
                 default:
                     die('Currently not handling type ' . $type);
             }
+
             foreach ($publications as $publication_entry) {
                 if ('O' == $publication_entry['type']) {
                     continue; // currently skip online publications
@@ -576,15 +583,18 @@ class ImportCommand extends BaseCommand
                     $file = $this->getBasePath() . '/resources/data/publicationIdTitleAuthorsContributors.tab';
                     $publication_persons = $this->readCsv($file, "\t");
                     break;
+
                 default:
                     die('Currently not handling type ' . $type);
             }
+
             foreach ($publication_persons as $publication_entry) {
                 $this->insertUpdatePublicationEntry($publication_entry, $update_existing);
             }
         }
         else if ($action == 'publicationplace') {
             $places_map = [];
+
             switch ($type) {
                 case 'tab':
                     $file = $this->getBasePath() . '/resources/data/publications_place_geonames.tsv';
@@ -595,9 +605,11 @@ class ImportCommand extends BaseCommand
                     $file = $this->getBasePath() . '/resources/data/publications_place_normalized.tsv';
                     $publications = $this->readCsv($file, "\t");
                     break;
+
                 default:
                     die('Currently not handling type ' . $type);
             }
+
             foreach ($publications as $publication) {
                 $place_normalized = $publication['place_normalized'];
                 if (!empty($place_normalized) && isset($places_map[$place_normalized])) {
@@ -617,9 +629,11 @@ class ImportCommand extends BaseCommand
                     $file = $this->getBasePath() . '/resources/data/places_geonames.tsv';
                     $places_geonames = $this->readCsv($file, "\t");
                     break;
+
                 default:
                     die('Currently not handling type ' . $type);
             }
+
             foreach ($places_geonames as $place) {
                 $dql = 'UPDATE Entities\Place p SET p.geonames = :geonames WHERE p.name = :name AND p.countryCode = :countryCode AND p.geonames IS NULL';
                 $parameters = [
@@ -637,9 +651,11 @@ class ImportCommand extends BaseCommand
                     $file = $this->getBasePath() . '/resources/data/2014-06-28.dump.countrylist.net.csv';
                     $countries = $this->readCsv($file, ";");
                     break;
+
                 default:
                     die('Currently not handling type ' . $type);
             }
+
             foreach ($countries as $country) {
                 $this->insertUpdateCountry($country, $update_existing);
             }
@@ -651,13 +667,14 @@ class ImportCommand extends BaseCommand
                     $file = $this->getBasePath() . '/resources/data/culturehub_clean-test.csv';
                     $persons = $this->readCsv($file);
                     break;
+
                 default:
                     die('Currently not handling type ' . $type);
             }
+
             foreach ($persons as $person) {
                 $this->insertUpdatePerson($person, $update_existing);
             }
-
         }
         else if ($action == 'publisher') {
             // list
@@ -680,6 +697,7 @@ class ImportCommand extends BaseCommand
                 default:
                     die('Currently not handling type ' . $type);
             }
+
             foreach ($reader as $publisher_entry) {
                 $this->insertUpdatePublisher($publisher_entry, $update_existing);
             }
@@ -691,14 +709,15 @@ class ImportCommand extends BaseCommand
                     $file = $this->getBasePath() . '/resources/data/verbannte-buecher.csv';
                     $list_entries = $this->readCsv($file);
                     break;
+
                 case 'json':
                     $file = $this->getBasePath() . '/resources/data/verbannte-buecher.json';
                     $list_entries = json_decode(file_get_contents($file), true);
                     break;
+
                 default:
                     die('Currently not handling type ' . $type);
             }
-
 
             $count = 0;
             foreach ($list_entries as $list_entry) {
@@ -708,7 +727,6 @@ class ImportCommand extends BaseCommand
             }
         }
     }
-
 }
 
 class FetchCommand extends BaseCommand
@@ -730,15 +748,16 @@ class FetchCommand extends BaseCommand
                 InputOption::VALUE_REQUIRED,
                 'specify entityfacts, dnb, wikidata, oclc or geonames',
                 null
-                )
-            ->setDescription('Fetch external data');
+            )
+            ->setDescription('Fetch external data')
+            ;
     }
 
     private function fetchPublicationData($type)
     {
         if ('dnb' == $type) {
             \EasyRdf_Namespace::set('dc', 'http://purl.org/dc/elements/1.1/');
-            \EasyRdf_Namespace::set('gnd', 'http://d-nb.info/standards/elementset/gnd#');
+            \EasyRdf_Namespace::set('gnd', 'https://d-nb.info/standards/elementset/gnd#');
             \EasyRdf_Namespace::set('isbd', 'http://iflastandards.info/ns/isbd/elements/');
             \EasyRdf_Namespace::set('rda', 'http://rdvocab.info/');
             \EasyRdf_Namespace::set('marcRole', 'http://id.loc.gov/vocabulary/relators/');
@@ -807,6 +826,7 @@ class FetchCommand extends BaseCommand
                     if (empty($resource)) {
                         die('TODO: handle rdf:type for ' . $url);
                     }
+
                     if (isset($resource)) {
                         foreach ([
                                 'schema:name' => 'title',
@@ -834,7 +854,7 @@ class FetchCommand extends BaseCommand
                 if (preg_match('/d\-nb\.info.*?\/([0-9xX]+)/', $publication->gnd, $matches)) {
                     $gnd_id = $matches[1];
                     var_dump($publication->gnd);
-                    $url = sprintf('http://d-nb.info/%s',
+                    $url = sprintf('https://d-nb.info/%s',
                                    $gnd_id);
 
                     $graph = new EasyRdf_Graph($url);
@@ -888,13 +908,13 @@ class FetchCommand extends BaseCommand
                                 }
                             }
                         }
-
                     }
                     catch (Exception $e) {
                         var_dump($e);
                     }
                 }
             }
+
             if ($persist) {
                 $this->em->persist($publication);
                 $this->em->flush();
@@ -964,7 +984,7 @@ class FetchCommand extends BaseCommand
         $results = $query->getResult();
 
         \EasyRdf_Namespace::set('dc', 'http://purl.org/dc/elements/1.1/');
-        \EasyRdf_Namespace::set('gnd', 'http://d-nb.info/standards/elementset/gnd#');
+        \EasyRdf_Namespace::set('gnd', 'https://d-nb.info/standards/elementset/gnd#');
         \EasyRdf_Namespace::set('geo', 'http://www.opengis.net/ont/geosparql#');
 
         \EasyRdf_Namespace::set('gn', 'http://www.geonames.org/ontology#');
@@ -973,6 +993,7 @@ class FetchCommand extends BaseCommand
         foreach ($results as $place) {
             if ('dnb' == $type && preg_match('/d\-nb\.info\/gnd\/([0-9xX]+)/', $place->gnd, $matches)) {
                 $gnd_id = $matches[1];
+
                 if ('dnb' == $type) {
                     var_dump($place->gnd);
                     $persist = false;
@@ -989,6 +1010,7 @@ class FetchCommand extends BaseCommand
                         if (!isset($resource)) {
                             echo('WARN: handle type for ' . $url);
                         }
+
                         if (isset($resource)) {
                             foreach ($resource->allResources('gnd:geographicAreaCode') as  $geographicAreaCode) {
                                 $uri = $geographicAreaCode->getUri();
@@ -997,18 +1019,18 @@ class FetchCommand extends BaseCommand
                                     $persist = true;
                                     break;
                                 }
-                                else if ('http://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-DDDE' == $uri) {
+                                else if ('https://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-DDDE' == $uri) {
                                     $place->countryCode = 'DE';
                                     $persist = true;
                                     break;
                                 }
                                 else if (in_array($uri, [
-                                        'http://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-DXDE',
-                                        'http://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-YUCS',
-                                        'http://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-CSXX',
-                                        'http://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-CSHH',
-                                        'http://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-SUHH',
-                                        'http://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-AAAT',
+                                        'https://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-DXDE',
+                                        'https://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-YUCS',
+                                        'https://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-CSXX',
+                                        'https://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-CSHH',
+                                        'https://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-SUHH',
+                                        'https://d-nb.info/standards/vocab/gnd/geographic-area-code#XA-AAAT',
                                     ]))
                                 {
                                     // no automatic mapping for no longer existing territories such as Deutsches Reich, Habsburg, Soviet Union or Yugoslavia, Czechoslovakia...
@@ -1041,18 +1063,15 @@ class FetchCommand extends BaseCommand
                             }
 
                         }
-
                     }
                     catch (Exception $e) {
                         var_dump($e->getMessage());
-
                     }
+
                     if ($persist) {
                         $this->em->persist($place);
                         $this->em->flush();
                     }
-
-
                 }
                 else {
                     die('TODO: handle type' . $type);
@@ -1128,6 +1147,7 @@ class FetchCommand extends BaseCommand
                 // skip initials
                 continue;
             }
+
             $gender = $name_service->genderize($person->forename, $person->surname);
             if (!empty($gender)) {
                 $person->gender = $gender;
@@ -1143,29 +1163,33 @@ class FetchCommand extends BaseCommand
         $qb = $this->em->createQueryBuilder();
         $qb->select([ 'P' ])
             ->from('Entities\Person', 'P');
+
         if ('dnb' == $type) {
             $qb->where('P.forename IS NULL AND P.surname IS NULL AND P.gnd IS NOT NULL');
         }
         else if ('wikidata' == $type) {
-            $qb->where("P.gnd IS NOT NULL AND (P.gndPlaceOfBirth IS NULL OR P.gndPlaceOfDeath IS NULL)");
+            $qb->where("P.gnd IS NOT NULL AND (P.gender IS NULL OR P.dateOfBirth IS NULL OR P.dateOfDeath IS NULL OR P.gndPlaceOfBirth IS NULL OR P.gndPlaceOfDeath IS NULL)");
             $qb->orderby('P.gnd');
         }
         else {
-            $qb->where('P.entityfacts IS NULL AND P.gnd IS NOT NULL');
+            $qb->where("P.entityfacts IS NULL AND P.gnd IS NOT NULL");
         }
-        // $qb->setMaxResults(15);
+
+        // $qb->setMaxResults(100);
 
         $query = $qb->getQuery();
         $results = $query->getResult();
         foreach ($results as $person) {
             if (preg_match('/d\-nb\.info\/gnd\/([0-9xX]+)/', $person->gnd, $matches)) {
                 $gnd_id = $matches[1];
+
                 if ('wikidata' == $type) {
                     $wikidata = Helper\Wikidata::fetchByGnd($gnd_id);
                     if (!empty($wikidata)) {
-                        var_dump($gnd_id);
                         $persist = false;
-                        foreach ([ 'dateOfBirth', 'dateOfDeath',
+                        foreach ([
+                            'gender',
+                            'dateOfBirth', 'dateOfDeath',
                             'placeOfBirth', 'placeOfDeath',
                             'gndPlaceOfBirth', 'gndPlaceOfDeath' ] as $key)
                         {
@@ -1184,15 +1208,29 @@ class FetchCommand extends BaseCommand
                                             continue;
                                         }
                                     }
+
                                     $value_new = 'http://d-nb.info/gnd/' . $value_new;
                                 }
+                                else if (in_array($key, [ 'dateOfBirth', 'dateOfDeath' ])) {
+                                    $value_new = preg_replace('/\-01\-01$/', '-00-00', $value_new);
+                                    if (preg_match('/^\-/', $value_new)) {
+                                        // database currenty doesn't handle negative dates
+                                        continue;
+                                    }
+                                }
+
+                                if (!empty($value) && $value_new == $value) {
+                                    continue;
+                                }
+
                                 $persist = true;
                                 $person->$target = $value_new;
-                                // var_dump($key . '->'.  $value_new . ' (' . $value . ')');
+                                var_dump($key . '->'.  $value_new . ' (' . $value . ')');
                             }
                         }
 
                         if ($persist) {
+                            var_dump($person->id);
                             $this->em->persist($person);
                             $this->em->flush();
                         }
@@ -1201,10 +1239,10 @@ class FetchCommand extends BaseCommand
                 else if ('dnb' == $type) {
                     var_dump($person->gnd);
                     $persist = false;
-                    $url = sprintf('http://d-nb.info/%s',
+                    $url = sprintf('https://d-nb.info/%s',
                                    $gnd_id);
 
-                    \EasyRdf_Namespace::set('gnd', 'http://d-nb.info/standards/elementset/gnd#');
+                    \EasyRdf_Namespace::set('gnd', 'https://d-nb.info/standards/elementset/gnd#');
                     $graph = new EasyRdf_Graph($url);
                     try {
                         $graph->load();
@@ -1212,6 +1250,7 @@ class FetchCommand extends BaseCommand
                         if (!isset($resource)) {
                             $resource = $graph->get('gnd:UndifferentiatedPerson', '^rdf:type');
                         }
+
                         if (isset($resource)) {
                             $preferredNameEntityForThePerson = $resource->getResource('gnd:preferredNameEntityForThePerson');
                             if (isset($preferredNameEntityForThePerson)) {
@@ -1235,7 +1274,6 @@ class FetchCommand extends BaseCommand
                         $this->em->persist($person);
                         $this->em->flush();
                     }
-
                 }
                 else {
                     $url = sprintf('http://hub.culturegraph.org/entityfacts/%s',
@@ -1275,6 +1313,7 @@ class FetchCommand extends BaseCommand
             if (empty($type)) {
                 $type = 'dnb';
             }
+
             $this->fetchPublicationData($type);
         }
         else if ($action == 'place') {
@@ -1282,6 +1321,7 @@ class FetchCommand extends BaseCommand
             if (empty($type)) {
                 $type = 'dnb';
             }
+
             $this->fetchPlaceData($type);
         }
         else if ('person-gender' == $action) {
@@ -1292,9 +1332,9 @@ class FetchCommand extends BaseCommand
             if (empty($type)) {
                 $type = 'entityfacts';
             }
+
             $this->fetchPersonData($type);
         }
-
     }
 }
 
@@ -1314,7 +1354,8 @@ class PopulateCommand extends BaseCommand
             ->setDescription('Populate database tables');
     }
 
-    private function insertUpdatePerson(&$person, $update_existing = true) {
+    private function insertUpdatePerson(&$person, $update_existing = true)
+    {
         $entity = $this->em->getRepository('Entities\Person')->findOneByGnd($person['gnd']);
 
         if (isset($entity) && !$update_existing) {
@@ -1327,8 +1368,7 @@ class PopulateCommand extends BaseCommand
             $entity->gnd = $person['gnd'];
         }
 
-        foreach ([ 'listRow', 'completeWorks' ] as $key)
-        {
+        foreach ([ 'listRow', 'completeWorks' ] as $key) {
             if (array_key_exists($key, $person)) {
                 $entity->{$key} = $person[$key];
             }
@@ -1340,7 +1380,8 @@ class PopulateCommand extends BaseCommand
         return true;
     }
 
-    private function insertUpdatePlace(&$place, $update_existing = true) {
+    private function insertUpdatePlace(&$place, $update_existing = true)
+    {
         if (!empty($place['geonames'])) {
             $entity = $this->em->getRepository('Entities\Place')->findOneByGeonames($place['geonames']);
         }
@@ -1363,8 +1404,7 @@ class PopulateCommand extends BaseCommand
             }
         }
 
-        foreach ([ 'name' ] as $key)
-        {
+        foreach ([ 'name' ] as $key) {
             if (array_key_exists($key, $place)) {
                 $entity->{$key} = $place[$key];
             }
@@ -1376,8 +1416,10 @@ class PopulateCommand extends BaseCommand
         return true;
     }
 
-    private function insertUpdatePublication(&$publication, $update_existing = true) {
-        $entity = $this->em->getRepository('Entities\Publication')->findOneByGnd($publication['gnd']);
+    private function insertUpdatePublication(&$publication, $update_existing = true)
+    {
+        $entity = $this->em->getRepository('Entities\Publication')
+                    ->findOneByGnd($publication['gnd']);
 
         if (isset($entity) && !$update_existing) {
             return true; // already done
@@ -1389,13 +1431,13 @@ class PopulateCommand extends BaseCommand
             $entity->gnd = $publication['gnd'];
         }
 
-        foreach ([ 'title', 'listRow' ] as $key)
-        {
+        foreach ([ 'title', 'listRow' ] as $key) {
             if (array_key_exists($key, $publication)) {
                 $value = $publication[$key];
                 if (isset($value) && '' === $value) {
                     $value = null;
                 }
+
                 $entity->{$key} = $publication[$key];
             }
         }
@@ -1417,14 +1459,14 @@ class PopulateCommand extends BaseCommand
 
         $action = $input->getArgument('action');
         if ($action == 'person-detail') {
-            $update = true; // todo: get from option
+            $forceUpdate = false; // todo: get from option
 
             // TODO: move this action to other command
             $qb = $entityManager->createQueryBuilder();
             $qb->select([ 'P' ])
                 ->from('Entities\Person', 'P')
                 ->where('P.entityfacts IS NOT NULL'
-                        . (!$update ? ' AND (P.preferredName IS NULL OR P.gndPlaceOfBirth IS NULL)' : ''))
+                        . (!$forceUpdate ? ' AND (P.preferredName IS NULL OR P.gndPlaceOfBirth IS NULL OR P.gndPlaceOfDeath IS NULL OR P.dateOfBirth IS NULL OR P.dateOfDeath IS NULL)' : ''))
                 // ->setMaxResults(4)
                 ;
 
@@ -1445,8 +1487,7 @@ class PopulateCommand extends BaseCommand
                     ] as $key => $target)
                 {
                     $value = $person->$target;
-                    if (($update || empty($value)) && (!empty($entityfacts['person'][$key]))) {
-                        $persist = true;
+                    if (($forceUpdate || empty($value)) && (!empty($entityfacts['person'][$key]))) {
                         if (is_array($entityfacts['person'][$key])) {
                             if (array_key_exists('@value', $entityfacts['person'][$key])) {
                                 $value = $entityfacts['person'][$key]['@value'];
@@ -1462,33 +1503,51 @@ class PopulateCommand extends BaseCommand
                             $value = $entityfacts['person'][$key];
                         }
 
+                        $persist = true;
                         $person->$target = $this->normalizeUnicode($value); // entityfacts uses combining characters
                     }
-
                 }
-                if (!empty($entityfacts['person']['gender'])) {
+
+                $gender = $person->gender;
+                if (empty($gender) && !empty($entityfacts['person']['gender'])) {
                     switch ($entityfacts['person']['gender']['@id']) {
-                        case 'http://d-nb.info/standards/vocab/gnd/gender#male':
+                        case 'https://d-nb.info/standards/vocab/gnd/gender#male':
                             $persist = true;
                             $person->gender = 'male';
                             break;
-                        case 'http://d-nb.info/standards/vocab/gnd/gender#female':
+
+                        case 'https://d-nb.info/standards/vocab/gnd/gender#female':
                             $persist = true;
                             $person->gender = 'female';
                             break;
                     }
                 }
+
                 foreach ([ 'dateOfBirth', 'dateOfDeath' ] as $key) {
                     $value = $person->{$key};
                     if ((empty($value) || $value === '0000-00-00')
                         && !empty($entityfacts['person'][$key]))
                     {
                         $value = $entityfacts['person'][$key];
-                        if (preg_match('/^\d{4}$/', $value)) {
+                        $valid = true;
+
+                        $parts = explode('.', $value, 3);
+
+                        if (3 == count($parts) && strtolower($parts['0']) == 'xx') {
+                            // for values like xx.09.1969
+                            $parts[0] = '00';
+                            if (strtolower($parts['1']) == 'xx') {
+                                $parts[1] = '00';
+                            }
+                            $value = join('-', array_reverse($parts));
+                            var_dump($value);
+                        }
+                        else if (preg_match('/^\d{4}$/', $value)) {
                             $value .= '-00-00';
                         }
                         else {
                             $date = \DateTime::createFromFormat('F d, Y', $value);
+
                             if (isset($date)) {
                                 $res = \DateTime::getLastErrors();
                                 if (0 == $res['warning_count'] && 0 == $res['error_count']) {
@@ -1497,33 +1556,54 @@ class PopulateCommand extends BaseCommand
                                         $value = $date_str;
                                     }
                                 }
+                                else {
+                                    var_dump($value);
+                                    $valid = false;
+                                }
                             }
                         }
-                        $person->{$key} = $value;
-                        $persist = true;
+
+                        if ($valid) {
+                            $person->{$key} = $value;
+                            $persist = true;
+                        }
                     }
                 }
 
                 if (!empty($entityfacts['sameAs'])) {
                     foreach ($entityfacts['sameAs'] as $sameAs) {
+                        if (!array_key_exists('publisher', $sameAs)) {
+                            continue;
+                        }
+
+                        $property = null;
+
                         switch ($sameAs['publisher']['abbr']) {
                             case 'VIAF':
-                                $person->viaf = $sameAs['@id'];
-                                $persist = true;
+                                $property = 'viaf';
                                 break;
+
                             case 'LC':
-                                $person->lcNaf = $sameAs['@id'];
-                                $persist = true;
+                                $property = 'lcNaf';
                                 break;
+                        }
+
+                        if (!is_null($property)) {
+                            $value = $person->{$property};
+                            if (empty($value) || $sameAs['@id'] != $value) {
+                                $person->{$property} = $sameAs['@id'];
+                                $persist = true;
+                            }
                         }
                     }
                 }
+
                 if ($persist) {
+                    var_dump($person->gnd);
                     $this->em->persist($person);
                     $this->em->flush();
                 }
             }
-
         }
         else if ('person' == $action) {
             $update_existing = true;
@@ -1569,6 +1649,7 @@ class PopulateCommand extends BaseCommand
                 ->where('Person.gndPlaceOfBirth IS NOT NULL OR Person.gndPlaceOfDeath IS NOT NULL')
                 // ->setMaxResults(1)
                 ;
+
             if (!$update_existing) {
                 $qb->having('P1.id IS NULL OR P2.id IS NULL');
             }
@@ -1579,6 +1660,7 @@ class PopulateCommand extends BaseCommand
                 if (!isset($result)) {
                     continue;
                 }
+
                 foreach ([ 'placeOfBirth', 'placeOfDeath' ] as $key) {
                     $gnd = $result->__get('gnd' . ucfirst($key));
                     if (!is_null($gnd)) {
@@ -1622,7 +1704,6 @@ class PopulateCommand extends BaseCommand
                         var_dump($place_record);
                         $this->insertUpdatePlace($place_record, $update_existing);
                     }
-
                 }
             }
         }
@@ -1645,11 +1726,13 @@ class PopulateCommand extends BaseCommand
                     $this->em->persist($publicationRef);
                     ++$persist_count;
                 }
+
                 if ($persist_count >= $batch_size) {
                     $this->em->flush();
                     $persist_count = 0;
                 }
             }
+
             if ($persist_count >= 0) {
                 $this->em->flush();
                 $persist_count = 0;
@@ -1693,24 +1776,29 @@ class PopulateCommand extends BaseCommand
                         }
                     }
                     $persist = false;
+
                     if (count($authors) > 0) {
                         $persist = true;
                         $publication->author = implode('; ', $authors);
                     }
+
                     if (count($editors) > 0) {
                         $persist = true;
                         $publication->editor = implode('; ', $editors);
                     }
+
                     if ($persist) {
                         $this->em->persist($publication);
                         ++$persist_count;
                     }
+
                     if ($persist_count >= $batch_size) {
                         $this->em->flush();
                         $persist_count = 0;
                     }
                 }
             }
+
             if ($persist_count >= 0) {
                 $this->em->flush();
                 $persist_count = 0;
@@ -1734,12 +1822,12 @@ class PopulateCommand extends BaseCommand
                 if (!isset($result)) {
                     continue;
                 }
+
                 $gnd = $result->titleGND;
                 $publication_record = [ 'gnd' => $gnd, 'listRow' => $result->row ];
                 $this->insertUpdatePublication($publication_record);
             }
         }
-
     }
 }
 
@@ -1759,8 +1847,10 @@ class AnalyticsCommand extends BaseCommand
             );
     }
 
-    private function stripGnd ($gnd) {
-        $gnd = preg_replace('/http\:\/\/d\-nb\.info\/gnd\//', '', $gnd);
+    private function stripGnd ($gnd)
+    {
+        $gnd = preg_replace('/https?\:\/\/d\-nb\.info\/gnd\//', '', $gnd);
+
         return preg_replace('/\-/', '_', $gnd);
     }
 
@@ -1905,6 +1995,5 @@ EOT;
 EOT;
             echo $ret;
         }
-
     }
 }
