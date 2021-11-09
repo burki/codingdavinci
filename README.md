@@ -4,7 +4,8 @@ codingdavinci
 - data.sql is a MySQL-database including the List, Publication and additional Person and Place
 
 ## Database Schema ##
-### List ###
+
+### list ###
 Data from http://www.berlin.de/rubrik/hauptstadt/verbannte_buecher/verbannte-buecher.json
 
 - row (1 based to connect the entry to the original JSON-entry)
@@ -25,7 +26,7 @@ and temporary properties until Publication.gnd and Person.gnd are set properly
 - authorGnd  VARCHAR(511) NULL,
 - authorGnd2 VARCHAR(511) NULL,
 
-### Publication ###
+### publication ###
 Data about the publications, property-names from the GND-Linked Data Representation and Bibo-properties (https://bibotools.googlecode.com/svn/bibo-ontology/trunk/doc/classes/Document___-538479979.html)
 
 - title
@@ -46,7 +47,7 @@ Norm-data identifiers
 - gnd
 - oclc
 
-###  Person ###
+### person ###
 - forename
 - surname
 - preferredName (Nachname, Vorname; z.B. Wolf, Victoria)
@@ -55,20 +56,20 @@ Norm-data identifiers
 - listRow  (reference to List.row)
 - gnd
 - viaf
+- wikidata
 
-### PublicationPerson ###
+### publicationperson ###
 - publication_id
 - person_id
-- role ENUM ('aut', 'edt', 'trl'), see http://www.loc.gov/marc/relators/relaterm.html
-- person_ord INT NOT NULL 0 # for ordering multiple Person
-- publication_ord INT NULL  # for ordeirng multiple Publication per Person by issued-date
+- role ENUM ('aut', 'edt', 'trl') # see http://www.loc.gov/marc/relators/relaterm.html
+- person_ord INT NOT NULL 0 # for ordering multiple person
+- publication_ord INT NULL  # for ordeirng multiple publication per person by issued-date
 
 
 ## Third party API ##
 - Person nach Name:
-	- Bsp: http://api.lobid.org/person?name=wolf+victoria
-- Publikation nach Titelstichwort und Autor
-	- Bsp: http://lobid.org/resource?q=Ignaz+Zadek+1907+frauenleiden&type=http://purl.org/dc/terms/BibliographicResource
-
+	- Bsp: http://lobid.org/gnd/search?q=preferredName%3Awolf+victoria&filter=type%3APerson&format=json
+- Publikation nach Titelstichwort, Erscheinungsjahr und Autor
+	- Bsp: https://lobid.org/resources/search?q=&issued=1907&agent=Ignaz+Zadek&name=Frauenleiden
 - Eingefügte Daten nach GND:
- 	- http://hub.culturegraph.org/entityfacts/{GND_Nummer}
+	- Bsp: http://hub.culturegraph.org/entityfacts/124963463
