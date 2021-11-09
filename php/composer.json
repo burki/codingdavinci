@@ -58,7 +58,7 @@
         "symfony/validator": "2.8.*",
         "symfony/translation": "2.8.*",
 
-        "leafo/lessphp": "@stable",
+        "marfrelen/lessphp": "0.5.*",
         "erusev/parsedown": "dev-master",
         "guzzle/guzzle": "@stable",
         "easyrdf/easyrdf": "0.9.*",
