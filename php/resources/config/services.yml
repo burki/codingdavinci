@@ -18,6 +18,10 @@ services:
         class: Service\NameService
         arguments: [ @gender-provider ]
 
+    gnd-provider:
+        class: Service\Gnd\DdbProvider
+        arguments: [ @http-client ]
+
     gnd-service:
         class: Service\GndService
         arguments: [ @gnd-provider ]
