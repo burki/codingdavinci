@@ -33,14 +33,21 @@ class DdbProvider implements GndProviderInterface
             return;
         }
 
-        $data = array('gnd' => $gnd,
-                      'oauth_consumer_key' => $this->options['oauth_consumer_key']
-                      );
+        $data = array(
+            'gnd' => $gnd,
+            'oauth_consumer_key' => $this->options['oauth_consumer_key']
+        );
 
         $request = $this->http_client->createRequest('GET',
                                                      array(self::URL_TEMPLATE, $data));
 
-        $response = $this->http_client->send($request);
+        try {
+            $response = $this->http_client->send($request);
+        }
+        catch (\Exception $e) {
+            return;
+        }
+
         if (200 != $response->getStatusCode()) {
             return;
         }
@@ -63,5 +70,4 @@ class DdbProvider implements GndProviderInterface
     {
         return 'ddb';
     }
-
 }
