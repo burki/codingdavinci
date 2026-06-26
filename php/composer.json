@@ -2,6 +2,11 @@
     "config": {
         "platform": {
             "php": "7.4.0"
+        },
+        "policy": {
+            "advisories": {
+                "block": false
+            }
         }
     },
 
