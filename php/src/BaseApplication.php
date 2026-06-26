@@ -183,5 +183,4 @@ abstract class BaseApplication
     {
         return $this->container->getParameter('base_path');
     }
-
 }
